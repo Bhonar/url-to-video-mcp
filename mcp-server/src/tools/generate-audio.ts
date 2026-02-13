@@ -24,19 +24,28 @@ interface AudioResult {
   beats: number[];
 }
 
+interface Voice {
+  voice_id: string;
+  name?: string;
+  language?: string;
+  gender?: string;
+}
+
 export async function generateAudio(params: AudioGenerationParams): Promise<AudioResult> {
   console.error(`Generating audio: ${params.musicStyle} style, ${params.duration}s`);
 
   const { musicStyle, narrationScript, duration } = params;
 
-  // Generate background music (instrumental only, no singing!)
+  // Generate background music (instrumental with structural lyrics)
   const music = await generateMusic(musicStyle, duration);
 
-  // Generate narration (text-to-speech)
+  // Generate narration (text-to-speech with intelligent voice selection)
   const narration = await generateNarration(narrationScript);
 
   // Detect beats from music for transition sync
-  const beats = await detectBeats(music.localPath);
+  const beats = music.localPath
+    ? await detectBeats(music.localPath)
+    : createPlaceholderBeats(duration);
 
   console.error(`✓ Generated audio: ${beats.length} beats detected`);
 
@@ -47,6 +56,14 @@ export async function generateAudio(params: AudioGenerationParams): Promise<Audi
   };
 }
 
+function createPlaceholderBeats(duration: number): number[] {
+  const beats: number[] = [];
+  for (let i = 1.0; i < duration; i += 1.2) {
+    beats.push(i);
+  }
+  return beats;
+}
+
 async function generateMusic(style: string, duration: number): Promise<AudioResult['music']> {
   const apiKey = process.env.MINIMAX_API_KEY;
   const groupId = process.env.MINIMAX_GROUP_ID; // Optional
@@ -55,10 +72,13 @@ async function generateMusic(style: string, duration: number): Promise<AudioResu
     throw new Error('MINIMAX_API_KEY must be set');
   }
 
+  // Create structural lyrics for instrumental music
+  const lyrics = createInstrumentalLyrics(duration);
+
   // Create prompt for instrumental music (NO SINGING!)
   const prompt = createMusicPrompt(style, duration);
 
-  console.error(`Generating ${style} music: "${prompt}"`);
+  console.error(`Generating ${style} music with structural guide: "${lyrics.substring(0, 50)}..."`);
 
   // Call MiniMax Music API
   const headers: Record<string, string> = {
@@ -72,18 +92,40 @@ async function generateMusic(style: string, duration: number): Promise<AudioResu
   }
 
   const response = await axios.post(
-    'https://api.minimax.chat/v1/music/generation',
+    'https://api.minimax.io/v1/music_generation',
     {
       model: 'music-2.5',
+      lyrics, // Structural lyrics to guide instrumental arrangement
       prompt,
       duration,
-      // Ensure no vocals/singing
-      instrumental: true,
+      output_format: 'url', // Request URL instead of hex-encoded data
     },
     { headers }
   );
 
-  const audioUrl = response.data.audio_url;
+  console.error('Music API Response:', JSON.stringify(response.data, null, 2));
+
+  // Check for errors (like insufficient balance)
+  if (response.data.base_resp?.status_code !== 0) {
+    const errorMsg = response.data.base_resp?.status_msg || 'Unknown error';
+    console.error(`⚠️  Music generation failed: ${errorMsg}. Skipping background music.`);
+    return {
+      url: '',
+      localPath: '',
+      duration,
+    };
+  }
+
+  // Extract audio URL from response
+  const audioUrl = response.data.data?.audio || response.data.audio_url || response.data.url;
+  if (!audioUrl) {
+    console.error('⚠️  No audio URL in response. Skipping background music.');
+    return {
+      url: '',
+      localPath: '',
+      duration,
+    };
+  }
 
   // Download to local temp directory
   const localPath = await downloadAudio(audioUrl, 'music');
@@ -95,6 +137,19 @@ async function generateMusic(style: string, duration: number): Promise<AudioResu
   };
 }
 
+function createInstrumentalLyrics(duration: number): string {
+  // Use structural tags to guide instrumental arrangement
+  // MiniMax Music 2.5 supports: Intro, Verse, Pre Chorus, Chorus, Interlude, Bridge, Outro, etc.
+
+  if (duration <= 20) {
+    return '[Intro][Inst][Build Up][Outro]';
+  } else if (duration <= 40) {
+    return '[Intro][Verse][Inst][Chorus][Inst][Bridge][Outro]';
+  } else {
+    return '[Intro][Verse][Inst][Pre Chorus][Chorus][Interlude][Inst][Bridge][Build Up][Outro]';
+  }
+}
+
 async function generateNarration(script: string): Promise<AudioResult['narration']> {
   const apiKey = process.env.MINIMAX_API_KEY;
   const groupId = process.env.MINIMAX_GROUP_ID; // Optional
@@ -104,6 +159,10 @@ async function generateNarration(script: string): Promise<AudioResult['narration
   }
 
   console.error('Generating narration...');
+
+  // Select appropriate voice based on script content
+  const voiceId = await selectVoice(script, apiKey, groupId);
+  console.error(`Selected voice: ${voiceId}`);
 
   // Call MiniMax Speech API (TTS)
   const headers: Record<string, string> = {
@@ -117,17 +176,45 @@ async function generateNarration(script: string): Promise<AudioResult['narration
   }
 
   const response = await axios.post(
-    'https://api.minimax.chat/v1/text_to_speech',
+    'https://api.minimax.io/v1/t2a_v2',
     {
-      model: 'speech-2.5-hd',
+      model: 'speech-2.6-hd',
       text: script,
-      voice_id: 'professional-neutral', // or make this configurable
+      voice_id: voiceId,
       speed: 1.0,
+      output_format: 'url', // Request URL instead of hex-encoded data
     },
     { headers }
   );
 
-  const audioUrl = response.data.audio_url;
+  console.error('TTS API Response structure:', {
+    hasData: !!response.data.data,
+    hasAudio: !!response.data.data?.audio,
+    statusCode: response.data.base_resp?.status_code,
+    statusMsg: response.data.base_resp?.status_msg,
+  });
+
+  // Check for errors (like insufficient balance)
+  if (response.data.base_resp?.status_code !== 0) {
+    const errorMsg = response.data.base_resp?.status_msg || 'Unknown error';
+    console.error(`⚠️  Narration generation failed: ${errorMsg}. Skipping narration.`);
+    return {
+      url: '',
+      localPath: '',
+      timecodes: [],
+    };
+  }
+
+  // Extract audio URL from response
+  const audioUrl = response.data.data?.audio || response.data.audio_url || response.data.url;
+  if (!audioUrl) {
+    console.error('⚠️  No audio URL in response. Skipping narration.');
+    return {
+      url: '',
+      localPath: '',
+      timecodes: [],
+    };
+  }
 
   // Download to local temp directory
   const localPath = await downloadAudio(audioUrl, 'narration');
@@ -141,6 +228,59 @@ async function generateNarration(script: string): Promise<AudioResult['narration
     localPath,
     timecodes,
   };
+}
+
+async function selectVoice(script: string, apiKey: string, groupId?: string): Promise<string> {
+  try {
+    // Try to get available voices from API
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${apiKey}`,
+    };
+
+    if (groupId) {
+      headers['X-Group-Id'] = groupId;
+    }
+
+    const response = await axios.get('https://api.minimax.io/v1/query/voice', { headers });
+
+    const voices: Voice[] = response.data.data?.voices || response.data.voices || [];
+
+    if (voices.length > 0) {
+      // Filter for English professional voices
+      const englishVoices = voices.filter(v =>
+        v.voice_id?.includes('English') || v.language?.toLowerCase().includes('en')
+      );
+
+      const professionalVoices = englishVoices.filter(v =>
+        v.voice_id?.toLowerCase().includes('professional') ||
+        v.voice_id?.toLowerCase().includes('narrator') ||
+        v.voice_id?.toLowerCase().includes('insightful') ||
+        v.voice_id?.toLowerCase().includes('speaker')
+      );
+
+      if (professionalVoices.length > 0) {
+        return professionalVoices[0].voice_id;
+      }
+
+      if (englishVoices.length > 0) {
+        return englishVoices[0].voice_id;
+      }
+
+      return voices[0].voice_id;
+    }
+  } catch (error) {
+    console.error('Failed to query voices, using fallback:', error instanceof Error ? error.message : String(error));
+  }
+
+  // Fallback to common professional voices
+  const fallbackVoices = [
+    'English_Insightful_Speaker',
+    'English_Professional_Narrator',
+    'English_Male_Narrator',
+    'English_Female_Narrator',
+  ];
+
+  return fallbackVoices[0];
 }
 
 function createMusicPrompt(style: string, duration: number): string {

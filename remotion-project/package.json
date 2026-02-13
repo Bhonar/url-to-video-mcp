@@ -10,9 +10,11 @@
   "dependencies": {
     "@remotion/bundler": "^4.0.0",
     "@remotion/cli": "^4.0.0",
+    "@remotion/layout-utils": "4.0.421",
     "@remotion/media-utils": "^4.0.0",
     "@remotion/renderer": "^4.0.0",
     "@remotion/tailwind": "^4.0.421",
+    "@remotion/transitions": "4.0.421",
     "animejs": "^3.2.1",
     "autoprefixer": "^10.4.16",
     "class-variance-authority": "^0.7.0",

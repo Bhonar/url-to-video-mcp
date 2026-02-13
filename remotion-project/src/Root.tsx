@@ -2,9 +2,7 @@ import React from 'react';
 import { Composition } from 'remotion';
 import { TailwindTest } from './compositions/TailwindTest';
 import { InlineTest } from './compositions/InlineTest';
-// Import Generated composition (will be created dynamically by Claude)
-// Uncomment this line after Generated.tsx is created:
-// import { Generated } from './compositions/Generated';
+import { Generated } from './compositions/Generated';
 import './tailwind-output.css'; // Pre-built Tailwind CSS
 
 export interface VideoProps {
@@ -13,6 +11,7 @@ export interface VideoProps {
     description: string;
     features: string[];
     heroImage?: string;
+    domain: string; // Display-friendly domain for showing in video
   };
   branding: {
     logo: { url: string };
@@ -30,6 +29,10 @@ export interface VideoProps {
     narration: { localPath: string; timecodes: any[] };
     beats: number[];
   };
+  metadata: {
+    domain: string; // Technical domain for tracking/analytics
+    industry: string;
+  };
   duration: number;
 }
 
@@ -37,7 +40,6 @@ export const Root: React.FC = () => {
   return (
     <>
       {/* Generated Composition - Dynamically created by Claude for each video */}
-      {/* Uncomment after Generated.tsx is created:
       <Composition
         id="Generated"
         component={Generated}
@@ -47,9 +49,14 @@ export const Root: React.FC = () => {
         height={1080}
         defaultProps={{
           content: {
-            title: 'Generated Video',
-            description: 'Dynamically generated',
-            features: [],
+            title: 'Example Video',
+            description: 'A dynamically generated video',
+            features: [
+              'Feature 1',
+              'Feature 2',
+              'Feature 3',
+            ],
+            domain: 'example.com',
           },
           branding: {
             logo: { url: '' },
@@ -67,10 +74,13 @@ export const Root: React.FC = () => {
             narration: { localPath: '', timecodes: [] },
             beats: [],
           },
+          metadata: {
+            domain: 'example.com',
+            industry: 'general',
+          },
           duration: 30,
         }}
       />
-      */}
 
       {/* Test Compositions */}
       <Composition
