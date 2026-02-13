@@ -865,6 +865,77 @@ const scale = spring({
 - `{ damping: 20, stiffness: 200 }` - Snappy, minimal bounce
 - `{ damping: 8 }` - Bouncy entrance
 
+**Easing functions** (for interpolate):
+
+```tsx
+import { interpolate, Easing } from 'remotion';
+
+// Apply easing to interpolation
+const value = interpolate(frame, [0, 100], [0, 1], {
+  easing: Easing.bezier(0.8, 0.22, 0.96, 0.65),
+  extrapolateLeft: 'clamp',
+  extrapolateRight: 'clamp',
+});
+```
+
+**Built-in easings:**
+
+```tsx
+// Quadratic
+Easing.in(Easing.quad)     // Slow start
+Easing.out(Easing.quad)    // Slow end
+Easing.inOut(Easing.quad)  // Slow start and end
+
+// Cubic (more pronounced)
+Easing.in(Easing.cubic)
+Easing.out(Easing.cubic)
+Easing.inOut(Easing.cubic)
+
+// Sine (gentle curves)
+Easing.in(Easing.sin)
+Easing.out(Easing.sin)
+Easing.inOut(Easing.sin)
+
+// Exponential (very dramatic)
+Easing.in(Easing.exp)
+Easing.out(Easing.exp)
+Easing.inOut(Easing.exp)
+
+// Circular
+Easing.in(Easing.circle)
+Easing.out(Easing.circle)
+Easing.inOut(Easing.circle)
+
+// Back (overshoots then settles)
+Easing.in(Easing.back(1.5))
+Easing.out(Easing.back(1.5))
+Easing.inOut(Easing.back(1.5))
+
+// Elastic (bouncy)
+Easing.in(Easing.elastic(1))
+Easing.out(Easing.elastic(1))
+Easing.inOut(Easing.elastic(1))
+
+// Bounce
+Easing.in(Easing.bounce)
+Easing.out(Easing.bounce)
+Easing.inOut(Easing.bounce)
+
+// Linear (no easing)
+Easing.linear
+
+// Custom bezier
+Easing.bezier(0.42, 0, 0.58, 1) // CSS cubic-bezier equivalent
+```
+
+**When to use:**
+- **Spring** - Organic, natural motion (DEFAULT choice)
+- **Easing.out(Easing.quad)** - Smooth deceleration (UI elements entering)
+- **Easing.inOut(Easing.cubic)** - Smooth acceleration and deceleration
+- **Easing.out(Easing.back())** - Overshoot effect (playful animations)
+- **Easing.out(Easing.bounce)** - Bouncy landing
+- **Easing.linear** - Constant speed (loading indicators, progress bars)
+
 ### Core: Sequencing
 
 **Use `<Sequence>` to delay when elements appear.**
@@ -882,7 +953,46 @@ const { fps } = useVideoConfig();
 
 **ALWAYS add `premountFor={1 * fps}`** to preload content before playback.
 
+**Why premountFor is important:**
+
+Without `premountFor`, components mount exactly when they appear on screen. This causes:
+- **Asset loading delays** - Images/videos not loaded in time
+- **Layout shifts** - Component sizes calculated too late
+- **Janky playback** - Stuttering when sequences start
+
+With `premountFor={1 * fps}`:
+- Component mounts **1 second early** (before visible)
+- Assets preload in the background
+- Layout calculated ahead of time
+- Smooth playback guaranteed
+
+```tsx
+// BAD - component mounts at frame 60, may cause stutter
+<Sequence from={60}>
+  <HeavyComponent />
+</Sequence>
+
+// GOOD - component mounts at frame 30 (1s early at 30fps)
+<Sequence from={60} premountFor={30}>
+  <HeavyComponent />
+</Sequence>
+
+// BEST - use fps for automatic adjustment
+const { fps } = useVideoConfig();
+<Sequence from={60} premountFor={1 * fps}>
+  <HeavyComponent />
+</Sequence>
+```
+
+**Rule of thumb:** Longer `premountFor` for heavier content (images, videos, complex layouts)
+
+---
+
 **For sequential scenes (no overlap), use `<Series>`:**
+
+### Series Component (Full API)
+
+Automatically sequences children one after another with no overlap.
 
 ```tsx
 import { Series } from 'remotion';
@@ -894,8 +1004,62 @@ import { Series } from 'remotion';
   <Series.Sequence durationInFrames={60}>
     <MainContent />
   </Series.Sequence>
+  <Series.Sequence durationInFrames={30}>
+    <Outro />
+  </Series.Sequence>
 </Series>
 ```
+
+**How it works:**
+- First sequence starts at frame 0, lasts 45 frames
+- Second sequence starts at frame 45, lasts 60 frames
+- Third sequence starts at frame 105, lasts 30 frames
+- Total duration: 135 frames
+
+**Props:**
+
+```typescript
+<Series>
+  <Series.Sequence durationInFrames={number}>
+    {children}
+  </Series.Sequence>
+</Series>
+```
+
+**Series.Sequence props:**
+- `durationInFrames` (required) - How long this sequence lasts
+- `layout` - `"absolute-fill"` (default) or `"none"`
+- `style` - CSS styles for the sequence container
+- `name` - Name for debugging in Remotion Studio
+- `premountFor` - Frames to premount (same as regular Sequence)
+
+**Compared to regular Sequence:**
+
+```tsx
+// Using Series - durations calculated automatically
+<Series>
+  <Series.Sequence durationInFrames={30}><A /></Series.Sequence>
+  <Series.Sequence durationInFrames={60}><B /></Series.Sequence>
+  <Series.Sequence durationInFrames={45}><C /></Series.Sequence>
+</Series>
+
+// Using Sequence - must calculate timing manually
+<>
+  <Sequence from={0} durationInFrames={30}><A /></Sequence>
+  <Sequence from={30} durationInFrames={60}><B /></Sequence>
+  <Sequence from={90} durationInFrames={45}><C /></Sequence>
+</>
+```
+
+**Benefits of Series:**
+- ✅ No manual timing calculations
+- ✅ Easy to reorder sequences
+- ✅ Easy to change durations without breaking layout
+- ✅ Less error-prone
+
+**When to use Series vs Sequence:**
+- Use **Series** when scenes play one after another (no overlap)
+- Use **Sequence** when you need precise control over timing or overlaps
 
 ### Core: Transitions
 
@@ -1479,6 +1643,181 @@ const randomCoordinates = new Array(10).fill(true).map((a, i) => ({
 random(null) === random(null); // false - generates different values
 ```
 
+### useCurrentFrame()
+
+Returns the current frame number of the video. **This is the fundamental hook for all animations in Remotion.**
+
+```tsx
+import { useCurrentFrame } from "remotion";
+
+const MyComponent = () => {
+  const frame = useCurrentFrame();
+
+  return <div>Current frame: {frame}</div>;
+};
+```
+
+**Returns:** `number` - The current frame (0-indexed, starts at 0)
+
+**Important:**
+- Inside a `<Sequence>`, returns the **local frame** (relative to the sequence start)
+- Inside a `<Loop>`, resets to 0 for each iteration
+- Inside a `<Freeze>`, returns the frozen frame number
+
+**Example - Animations:**
+```tsx
+const frame = useCurrentFrame();
+const { fps } = useVideoConfig();
+
+// Fade in over 2 seconds
+const opacity = interpolate(frame, [0, 2 * fps], [0, 1], {
+  extrapolateRight: 'clamp',
+});
+
+// Rotate continuously
+const rotation = frame * 2; // 2 degrees per frame
+```
+
+**Example - Conditional rendering:**
+```tsx
+const frame = useCurrentFrame();
+const { fps } = useVideoConfig();
+
+// Show element only between 2-5 seconds
+if (frame >= 2 * fps && frame <= 5 * fps) {
+  return <div>Visible between 2-5s</div>;
+}
+```
+
+### useVideoConfig()
+
+Returns the configuration of the current composition (dimensions, fps, duration).
+
+```tsx
+import { useVideoConfig } from "remotion";
+
+const MyComponent = () => {
+  const { width, height, fps, durationInFrames, id } = useVideoConfig();
+
+  return (
+    <div>
+      Video: {width}x{height} at {fps}fps
+    </div>
+  );
+};
+```
+
+**Returns:**
+```typescript
+{
+  width: number;           // Video width in pixels
+  height: number;          // Video height in pixels
+  fps: number;             // Frames per second
+  durationInFrames: number; // Total duration in frames
+  id: string;              // Composition ID
+}
+```
+
+**Use cases:**
+
+**1. Responsive sizing:**
+```tsx
+const { width, height } = useVideoConfig();
+
+const logoSize = Math.min(width, height) * 0.3;
+const padding = width * 0.05;
+```
+
+**2. Time calculations:**
+```tsx
+const { fps, durationInFrames } = useVideoConfig();
+
+const durationInSeconds = durationInFrames / fps;
+const halfway = durationInFrames / 2;
+```
+
+**3. Aspect ratio detection:**
+```tsx
+const { width, height } = useVideoConfig();
+
+const isPortrait = height > width;
+const isSquare = width === height;
+const aspectRatio = width / height;
+```
+
+### AbsoluteFill
+
+A layout component that fills the entire composition space. **Use this as the root container for scenes.**
+
+```tsx
+import { AbsoluteFill } from "remotion";
+
+const MyComponent = () => {
+  return (
+    <AbsoluteFill
+      style={{
+        backgroundColor: '#000',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
+      <h1>Centered Content</h1>
+    </AbsoluteFill>
+  );
+};
+```
+
+**What it does:**
+- Sets `position: absolute`
+- Sets `top: 0`, `left: 0`, `right: 0`, `bottom: 0`
+- Sets `width: 100%`, `height: 100%`
+- Adds `display: flex` by default
+
+**Props:**
+```typescript
+{
+  style?: React.CSSProperties;
+  className?: string;
+  children?: React.ReactNode;
+}
+```
+
+**Common patterns:**
+
+**Centered content:**
+```tsx
+<AbsoluteFill
+  style={{
+    justifyContent: 'center',
+    alignItems: 'center',
+  }}
+>
+  <Logo />
+</AbsoluteFill>
+```
+
+**Background + foreground layers:**
+```tsx
+<>
+  {/* Background layer */}
+  <AbsoluteFill style={{ backgroundColor: '#000' }} />
+
+  {/* Foreground content */}
+  <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center' }}>
+    <Content />
+  </AbsoluteFill>
+</>
+```
+
+**Gradient background:**
+```tsx
+<AbsoluteFill
+  style={{
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  }}
+/>
+```
+
 ### delayRender() / continueRender()
 
 Pause rendering for async operations like data fetching or font loading.
@@ -1676,6 +2015,299 @@ import { staticFile } from "remotion";
 <Video src={staticFile("video.mp4")} volume={0.5} playbackRate={2} />
 ```
 
+### OffthreadVideo
+
+**Performance-optimized video component** that renders video frames in a separate thread. Use this for better performance when embedding videos.
+
+```bash
+npx remotion add @remotion/offthread-video
+```
+
+```tsx
+import { OffthreadVideo } from "@remotion/offthread-video";
+import { staticFile } from "remotion";
+
+<OffthreadVideo src={staticFile("video.mp4")} />
+```
+
+**Why use OffthreadVideo?**
+- ✅ **Faster rendering** - Video decoding happens off the main thread
+- ✅ **Better performance** - Doesn't block other rendering operations
+- ✅ **Same API** - Works like regular `<Video>` component
+
+**All Video props supported:**
+```tsx
+<OffthreadVideo
+  src={staticFile("video.mp4")}
+  volume={0.5}
+  playbackRate={1.5}
+  trimBefore={30}
+  trimAfter={90}
+  startFrom={0}
+  endAt={120}
+/>
+```
+
+**When to use:**
+- ✅ Embedding multiple videos in one composition
+- ✅ Large video files (better performance)
+- ✅ Complex compositions with many elements
+- ❌ Browser playback (not supported - renders only)
+
+**Important:** OffthreadVideo only works during rendering, not in preview. For preview, it falls back to regular Video component.
+
+### Prefetch
+
+Preload images and assets before they appear on screen to avoid loading delays.
+
+```tsx
+import { prefetch } from "remotion";
+import { useEffect } from "react";
+
+const MyComponent = () => {
+  useEffect(() => {
+    // Prefetch images
+    const { free, waitUntilDone } = prefetch("https://example.com/image.png");
+
+    // Optional: wait for prefetch to complete
+    waitUntilDone().then(() => {
+      console.log("Image preloaded!");
+    });
+
+    // Cleanup
+    return () => {
+      free();
+    };
+  }, []);
+
+  return <img src="https://example.com/image.png" />;
+};
+```
+
+**Returns:**
+```typescript
+{
+  free: () => void;          // Cancel prefetch and cleanup
+  waitUntilDone: () => Promise<void>; // Wait for prefetch completion
+}
+```
+
+**Use cases:**
+
+**Prefetch next scene images:**
+```tsx
+useEffect(() => {
+  if (frame > 60) {
+    // Prefetch image that appears at frame 90
+    const { free } = prefetch(staticFile("scene2-bg.jpg"));
+    return free;
+  }
+}, [frame]);
+```
+
+**Prefetch multiple images:**
+```tsx
+useEffect(() => {
+  const images = [
+    "image1.png",
+    "image2.png",
+    "image3.png",
+  ];
+
+  const cleanups = images.map((img) => prefetch(staticFile(img)));
+
+  return () => {
+    cleanups.forEach((c) => c.free());
+  };
+}, []);
+```
+
+**When to use:**
+- ✅ Large images that take time to load
+- ✅ Images that appear later in the video
+- ✅ Multiple images in sequence
+- ❌ Small images (overhead not worth it)
+- ❌ Images that appear immediately (already loaded)
+
+### interpolateColors()
+
+Smoothly interpolate between two colors (hex, rgb, rgba, hsl).
+
+```tsx
+import { interpolateColors } from "remotion";
+
+const MyComponent = () => {
+  const frame = useCurrentFrame();
+
+  const color = interpolateColors(
+    frame,
+    [0, 100],
+    ["#ff0000", "#0000ff"] // red to blue
+  );
+
+  return <div style={{ backgroundColor: color }}>Color transition</div>;
+};
+```
+
+**Supported color formats:**
+```tsx
+// Hex colors
+interpolateColors(frame, [0, 100], ["#ff0000", "#0000ff"]);
+
+// RGB
+interpolateColors(frame, [0, 100], ["rgb(255, 0, 0)", "rgb(0, 0, 255)"]);
+
+// RGBA (with opacity)
+interpolateColors(frame, [0, 100], ["rgba(255, 0, 0, 1)", "rgba(0, 0, 255, 0.5)"]);
+
+// HSL
+interpolateColors(frame, [0, 100], ["hsl(0, 100%, 50%)", "hsl(240, 100%, 50%)"]);
+```
+
+**With extrapolation:**
+```tsx
+const color = interpolateColors(
+  frame,
+  [0, 100],
+  ["#ff0000", "#0000ff"],
+  {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  }
+);
+```
+
+**Multi-color gradients:**
+```tsx
+// Fade through multiple colors
+const color = interpolateColors(
+  frame,
+  [0, 50, 100],
+  ["#ff0000", "#00ff00", "#0000ff"] // red → green → blue
+);
+```
+
+**Use cases:**
+- Background color transitions
+- Text color animations
+- Gradient shifts
+- Theme transitions
+
+### getRemotionEnvironment()
+
+Detect the current Remotion environment (rendering, preview, or regular browser).
+
+```tsx
+import { getRemotionEnvironment } from "remotion";
+
+const env = getRemotionEnvironment();
+
+if (env.isRendering) {
+  console.log("Rendering video...");
+}
+
+if (env.isPlayer) {
+  console.log("In Remotion Player");
+}
+
+if (env.isStudio) {
+  console.log("In Remotion Studio");
+}
+```
+
+**Returns:**
+```typescript
+{
+  isRendering: boolean;  // True during npx remotion render
+  isPlayer: boolean;     // True in Remotion Player
+  isStudio: boolean;     // True in Remotion Studio (preview)
+}
+```
+
+**Use cases:**
+
+**Conditional logging:**
+```tsx
+const env = getRemotionEnvironment();
+
+if (!env.isRendering) {
+  console.log("Frame:", frame); // Only log during preview
+}
+```
+
+**Performance optimization:**
+```tsx
+const env = getRemotionEnvironment();
+
+// Use high quality only during rendering
+const quality = env.isRendering ? "high" : "low";
+```
+
+**Development helpers:**
+```tsx
+const env = getRemotionEnvironment();
+
+if (env.isStudio) {
+  // Show debug overlays only in studio
+  return <DebugOverlay />;
+}
+```
+
+### getInputProps()
+
+Get the props passed to a composition programmatically (useful in calculateMetadata).
+
+```tsx
+import { getInputProps } from "remotion";
+
+const MyComponent = () => {
+  const inputProps = getInputProps();
+
+  console.log(inputProps);
+  // { title: "My Video", color: "#ff0000" }
+
+  return <div>{inputProps.title}</div>;
+};
+```
+
+**Returns:** The props object passed to the composition
+
+**Use in calculateMetadata:**
+```tsx
+import { CalculateMetadataFunction } from "remotion";
+import { getInputProps } from "remotion";
+
+const calculateMetadata: CalculateMetadataFunction = async () => {
+  const inputProps = getInputProps();
+
+  // Use props to determine duration
+  const duration = inputProps.videoDuration || 30;
+
+  return {
+    durationInFrames: duration * 30,
+  };
+};
+```
+
+**Use in components:**
+```tsx
+const MyComponent = () => {
+  const props = getInputProps();
+
+  return (
+    <div>
+      <h1>{props.title}</h1>
+      <p>{props.description}</p>
+    </div>
+  );
+};
+```
+
+**When to use:**
+- ✅ In `calculateMetadata` to access props before component renders
+- ✅ When you need props but don't want to pass them through component tree
+- ❌ Regular components (just use component props instead)
+
 ### Compositions
 
 Define compositions in `src/Root.tsx`.
@@ -1731,6 +2363,61 @@ const calculateMetadata: CalculateMetadataFunction<MyProps> = async ({
   calculateMetadata={calculateMetadata}
 />
 ```
+
+---
+
+**Organize compositions with Folder:**
+
+```tsx
+import { Composition, Folder } from 'remotion';
+
+export const Root = () => {
+  return (
+    <>
+      {/* Top-level compositions */}
+      <Composition id="Main" component={Main} {...config} />
+
+      {/* Organize related compositions in folders */}
+      <Folder name="Social Media">
+        <Composition id="Instagram" component={Instagram} {...config} />
+        <Composition id="TikTok" component={TikTok} {...config} />
+        <Composition id="YouTube" component={YouTube} {...config} />
+      </Folder>
+
+      <Folder name="Templates">
+        <Composition id="Template1" component={Template1} {...config} />
+        <Composition id="Template2" component={Template2} {...config} />
+      </Folder>
+
+      {/* Nested folders */}
+      <Folder name="Archive">
+        <Folder name="2023">
+          <Composition id="OldVideo" component={OldVideo} {...config} />
+        </Folder>
+      </Folder>
+    </>
+  );
+};
+```
+
+**Folder props:**
+```typescript
+{
+  name: string; // Folder name in Remotion Studio sidebar
+  children: React.ReactNode; // Compositions or nested Folders
+}
+```
+
+**Benefits:**
+- ✅ Organize compositions in Remotion Studio sidebar
+- ✅ Collapse/expand folders for easier navigation
+- ✅ Group related compositions together
+- ✅ Support unlimited nesting
+
+**Folder naming best practices:**
+- Use clear, descriptive names
+- Group by purpose (e.g., "Social Media", "Tests", "Drafts")
+- Use folders for projects with 5+ compositions
 
 ### Fonts
 
@@ -1999,6 +2686,155 @@ const response = await fetch(
 const audioBuffer = Buffer.from(await response.arrayBuffer());
 writeFileSync(`public/voiceover/scene.mp3`, audioBuffer);
 ```
+
+### getVideoMetadata()
+
+Get comprehensive metadata from a video file (codec, dimensions, duration, bitrate).
+
+```bash
+npx remotion add @remotion/media-parser
+```
+
+```tsx
+import { getVideoMetadata } from "@remotion/media-parser";
+import { staticFile } from "remotion";
+
+const metadata = await getVideoMetadata(staticFile("video.mp4"));
+
+console.log(metadata);
+// {
+//   width: 1920,
+//   height: 1080,
+//   durationInSeconds: 30.5,
+//   codec: "h264",
+//   fps: 30,
+//   bitrate: 5000000,
+//   hasAudio: true,
+//   audioCodec: "aac"
+// }
+```
+
+**Returns:**
+```typescript
+{
+  width: number;
+  height: number;
+  durationInSeconds: number;
+  codec: string;          // e.g., "h264", "vp9", "av1"
+  fps: number;
+  bitrate: number;
+  hasAudio: boolean;
+  audioCodec?: string;    // e.g., "aac", "opus", "mp3"
+  audioBitrate?: number;
+}
+```
+
+**Use cases:**
+
+**Validate video before rendering:**
+```tsx
+const metadata = await getVideoMetadata(videoUrl);
+
+if (metadata.codec !== "h264") {
+  throw new Error("Only H.264 videos supported");
+}
+
+if (metadata.durationInSeconds > 60) {
+  throw new Error("Video too long (max 60 seconds)");
+}
+```
+
+**Dynamic composition setup:**
+```tsx
+const calculateMetadata: CalculateMetadataFunction = async () => {
+  const metadata = await getVideoMetadata(staticFile("input.mp4"));
+
+  return {
+    durationInFrames: Math.ceil(metadata.durationInSeconds * 30),
+    width: metadata.width,
+    height: metadata.height,
+  };
+};
+```
+
+### getAudioData()
+
+Get audio waveform data from an audio or video file for visualizations.
+
+```bash
+npx remotion add @remotion/media-utils
+```
+
+```tsx
+import { getAudioData } from "@remotion/media-utils";
+import { staticFile } from "remotion";
+
+const audioData = await getAudioData(staticFile("audio.mp3"));
+
+console.log(audioData);
+// {
+//   channelWaveforms: [Float32Array, Float32Array], // stereo
+//   sampleRate: 44100,
+//   durationInSeconds: 180.5,
+//   numberOfChannels: 2,
+//   resultId: "unique-id",
+//   isRemote: false
+// }
+```
+
+**Returns:**
+```typescript
+{
+  channelWaveforms: Float32Array[]; // One array per channel
+  sampleRate: number;               // e.g., 44100, 48000
+  durationInSeconds: number;
+  numberOfChannels: number;         // 1 = mono, 2 = stereo
+  resultId: string;
+  isRemote: boolean;
+}
+```
+
+**Use cases:**
+
+**Full audio waveform visualization:**
+```tsx
+const audioData = await getAudioData(staticFile("song.mp3"));
+const waveform = audioData.channelWaveforms[0]; // Left channel
+
+// Downsample for visualization
+const samples = 1000;
+const step = Math.floor(waveform.length / samples);
+const displayData = [];
+
+for (let i = 0; i < samples; i++) {
+  displayData.push(waveform[i * step]);
+}
+
+return (
+  <svg width={1000} height={200}>
+    {displayData.map((value, i) => (
+      <rect
+        key={i}
+        x={i}
+        y={100 - value * 100}
+        width={1}
+        height={Math.abs(value) * 200}
+        fill="white"
+      />
+    ))}
+  </svg>
+);
+```
+
+**Detect audio duration:**
+```tsx
+const audioData = await getAudioData(staticFile("audio.mp3"));
+const durationInFrames = Math.ceil(audioData.durationInSeconds * 30);
+```
+
+**Difference from useWindowedAudioData():**
+- `getAudioData()` - Loads FULL audio file at once (use in calculateMetadata)
+- `useWindowedAudioData()` - Loads audio in rolling window (use in components during rendering)
 
 ### Mediabunny Utilities
 
