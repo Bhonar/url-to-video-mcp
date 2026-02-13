@@ -1,0 +1,19 @@
+{
+  "name": "url-to-video-mcp",
+  "version": "1.0.0",
+  "description": "Transform landing pages into motion graphics videos using AI",
+  "type": "module",
+  "scripts": {
+    "test": "node test-extraction.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.1",
+    "@remotion/bundler": "^4.0.267",
+    "@remotion/renderer": "^4.0.267",
+    "remotion": "^4.0.267",
+    "axios": "^1.6.0"
+  },
+  "keywords": ["video", "mcp", "remotion", "ai"],
+  "author": "",
+  "license": "MIT"
+}
