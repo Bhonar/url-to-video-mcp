@@ -1,8 +1,94 @@
----
-name: url-to-video
-description: Create motion graphics videos from URLs using Remotion with AI-generated audio
+# SKILL.md Restructuring Plan
+
+**Date:** 2026-02-13
+**Purpose:** Transform SKILL.md from template-driven to quality-driven design approach
+**Goal:** Force agents to create unique, high-quality videos using all Remotion best practices
+
 ---
 
+## Executive Summary
+
+### Current Problems
+1. ❌ 400-line Generated.tsx example becomes a template (agents copy it)
+2. ❌ Core Features section comes AFTER workflow (agents skip it)
+3. ❌ Advanced Features ignored (agents don't know when to use them)
+4. ❌ No design phase (agents go straight to coding)
+5. ❌ No validation checklist (agents skip quality checks)
+6. ❌ API Reference buried at bottom (agents never see it)
+
+### Solution
+1. ✅ Remove ALL complete code examples
+2. ✅ Add mandatory design phases (Steps 2, 3, 4, 5, 8, 9)
+3. ✅ Add decision trees (when to use which features)
+4. ✅ Add 30-item quality checklist (mandatory before render)
+5. ✅ Reorganize: Workflow → Reference (workflow-first)
+6. ✅ Enforce brand-driven design (colors, fonts, personality)
+
+---
+
+## File Structure Comparison
+
+### OLD Structure (Current - 2,489 lines)
+```
+1. Table of Contents
+2. Quick Start (with minimal example)
+3. Complete Workflow (with 400-line Generated.tsx example) ← PROBLEM
+4. Core Features (essential patterns) ← Too late, agents already coded
+5. Advanced Features (use when needed) ← Agents ignore this
+6. API Reference (1000+ lines) ← Agents never reach this
+7. Troubleshooting
+8. Best Practices (buried at end)
+```
+
+**Problems:**
+- Example code appears at line 266 (too early)
+- Design guidance appears at line 242 but is weak
+- Validation appears nowhere (missing)
+- API Reference at line 1433 (too far down)
+
+### NEW Structure (Planned)
+```
+PART 1: UNDERSTANDING
+1. Introduction & Philosophy
+2. Process Overview (8 steps, no code)
+
+PART 2: EXECUTION WORKFLOW (Follow in Order)
+Step 1: Extract Content (MCP tool)
+Step 2: Brand Analysis ⚠️ MANDATORY DESIGN PHASE
+Step 3: Scene Design ⚠️ MANDATORY DESIGN PHASE
+Step 4: Animation Planning ⚠️ MANDATORY DESIGN PHASE
+Step 5: Transition Planning ⚠️ MANDATORY DESIGN PHASE
+Step 6: Write Script
+Step 7: Generate Audio (MCP tool)
+Step 8: Advanced Features Decision ⚠️ MANDATORY EVALUATION
+Step 9: Code Structure Planning ⚠️ MANDATORY DESIGN PHASE
+Step 10: Write Remotion Code (structure only, NO examples)
+Step 11: Quality Validation ⚠️ MANDATORY 30-ITEM CHECKLIST
+Step 12: Render Video (MCP tool)
+
+PART 3: REFERENCE (Quick Lookup)
+- Remotion API Quick Reference (organized by category)
+- Common Animation Patterns (small snippets only)
+- Anti-Patterns (what NOT to do)
+- Troubleshooting
+```
+
+**Benefits:**
+- No complete examples to copy
+- Design phases before coding (Steps 2-5, 9)
+- Validation checklist before render (Step 11)
+- Advanced features evaluated (Step 8)
+- API Reference accessible (Part 3)
+
+---
+
+## Detailed Changes by Section
+
+### SECTION 1: Introduction & Philosophy
+**Status:** NEW (doesn't exist in current file)
+
+**Add:**
+```markdown
 # URL to Video - Remotion Skill
 
 ## Philosophy: Quality Over Speed
@@ -10,11 +96,11 @@ description: Create motion graphics videos from URLs using Remotion with AI-gene
 This skill creates **unique, high-quality promotional videos** from landing page URLs. Every video is custom-designed based on the brand's personality, colors, and content.
 
 **Core Principles:**
-- **No Templates** - Every video is designed from scratch
-- **Design Before Code** - Plan scenes, animations, transitions first
-- **Brand-Driven** - Colors, fonts, style reflect the brand
-- **Advanced Features** - Evaluate and use when appropriate
-- **Quality Validation** - 30-item checklist before rendering
+- 🎨 **No Templates** - Every video is designed from scratch
+- 🧠 **Design Before Code** - Plan scenes, animations, transitions first
+- 🎯 **Brand-Driven** - Colors, fonts, style reflect the brand
+- ✨ **Advanced Features** - Evaluate and use when appropriate
+- ✅ **Quality Validation** - 30-item checklist before rendering
 
 **What This Produces:**
 - 30-90 second promotional videos
@@ -23,9 +109,22 @@ This skill creates **unique, high-quality promotional videos** from landing page
 - AI-generated narration
 - Beat-synced scene transitions
 - Professional typography and layout
+```
+
+**Lines:** ~30 lines
 
 ---
 
+### SECTION 2: Process Overview
+**Status:** NEW (current "Quick Start" is removed)
+
+**Current Quick Start (REMOVE):**
+- Lines 37-112 (75 lines)
+- Contains minimal example code ❌
+- Contains common mistakes section ✅ (move to Anti-Patterns)
+
+**New Process Overview (ADD):**
+```markdown
 ## The Complete Process
 
 Every video follows these 12 steps:
@@ -49,110 +148,26 @@ Every video follows these 12 steps:
 12. **Render Video** - Generate final MP4 file
 
 **Critical:** Steps 2-5 and 8-11 are MANDATORY design and validation phases. You cannot skip them.
-
----
-
-## When to Use This Skill
-
-Use this skill when you need to:
-
-- **Create promotional videos** from landing page URLs
-- **Generate social media content** from product pages
-- **Turn website content** into engaging video
-- **Produce explainer videos** automatically
-- **Create product launch videos** from SaaS pages
-
-**Perfect for:**
-- SaaS product launches
-- Marketing campaigns
-- Social media ads
-- Website hero videos
-- Product demos
-
-**Not suitable for:**
-- Long-form content (>2 minutes)
-- Videos requiring live action footage
-- Videos with complex 3D models
-- Videos requiring manual video editing
-
----
-
-## Video Capabilities
-
-**Technical Specifications:**
-- **Resolution:** 1920x1080 (Full HD)
-- **Frame Rate:** 30 fps
-- **Duration:** 30-90 seconds (recommended)
-- **Format:** MP4 (H.264 codec)
-- **Audio:** Stereo, AAC codec
-
-**Animation Capabilities:**
-- Spring-based physics animations
-- Smooth scene transitions (fade, slide, wipe, flip, clockWipe)
-- Text animations and effects
-- Logo reveals and scaling
-- Color interpolation and gradients
-- Beat-synchronized motion
-
-**Advanced Features:**
-- Audio visualization (spectrum bars, waveforms)
-- 3D graphics and models
-- Data charts and graphs
-- Mapbox integration for location-based content
-- Lottie animations
-- Skia-powered visual effects
-- TikTok-style captions
-
----
-
-# Part 2: Complete Workflow
-
-## Step 1: Extract Content from URL
-
-**Call the MCP tool:**
-
-```typescript
-const extracted = await extract_url_content({
-  url: "https://example.com"
-});
 ```
 
-**Returns:**
+**Lines:** ~40 lines
 
-```typescript
-{
-  content: {
-    title: string;
-    description: string;
-    features: string[];
-    heroImage?: string;
-    sections: Array<{ heading: string; content: string }>;
-    domain: string;
-  },
-  branding: {
-    logo: { url: string };
-    colors: {
-      primary: string;
-      secondary: string;
-      accent: string;
-      background: string;
-    };
-    font: string;
-    theme: 'light' | 'dark';
-  },
-  metadata: {
-    domain: string;
-    industry: string;
-  }
-}
-```
+---
 
-**What it does:**
-1. Uses Tabstack API to extract page content
-2. Uses Brand Identity Extractor for logo + color palette
-3. Falls back to Playwright screenshot + Claude Vision if needed
-4. Infers industry from content
+### SECTION 3: Step 1 - Extract Content
+**Status:** EXISTS (currently at line 118-157)
 
+**Current Content:**
+- MCP tool call ✅
+- Return structure ✅
+- What it does ✅
+
+**Changes Required:**
+- Add "What to save" section
+- Add "Next steps" section
+
+**Add After Return Structure:**
+```markdown
 **Save These Values (You'll Need Them):**
 - `branding.colors.primary` - Main brand color
 - `branding.colors.secondary` - Supporting color
@@ -165,10 +180,18 @@ const extracted = await extract_url_content({
 - `content.features.length` - Number of features (determines scene count)
 
 **Next Step:** Proceed to Step 2 (Brand Analysis)
+```
+
+**Lines:** Keep ~50 lines, add ~15 lines = 65 lines total
 
 ---
 
-## Step 2: Brand & Content Analysis (MANDATORY)
+### SECTION 4: Step 2 - Brand Analysis (NEW)
+**Status:** NEW (doesn't exist)
+
+**Add Complete Section:**
+```markdown
+## Step 2: Brand & Content Analysis ⚠️ MANDATORY
 
 **Before writing any code, analyze the brand to inform all design decisions.**
 
@@ -295,8 +318,18 @@ IF content is feature-heavy
 **Cannot proceed to Step 3 without completing this analysis.**
 
 ---
+```
 
-## Step 3: Scene Structure Design (MANDATORY)
+**Lines:** ~150 lines
+
+---
+
+### SECTION 5: Step 3 - Scene Design (NEW)
+**Status:** NEW (doesn't exist)
+
+**Add Complete Section:**
+```markdown
+## Step 3: Scene Structure Design ⚠️ MANDATORY
 
 **Design your complete scene structure before writing any code.**
 
@@ -312,14 +345,14 @@ IF content is feature-heavy
 ### Required Scene Types
 
 **Every video MUST include:**
-- **Hook Scene** (always first) - 3-5 seconds
-- **Solution Scene** (always) - 10-15 seconds
-- **CTA Scene** (always last) - 3-5 seconds
+- ✅ **Hook Scene** (always first) - 3-5 seconds
+- ✅ **Solution Scene** (always) - 10-15 seconds
+- ✅ **CTA Scene** (always last) - 3-5 seconds
 
 **Include if applicable:**
-- **Problem Scene** (if pain point exists) - 5-10 seconds
-- **Features Scene** (if 3+ features) - 15-25 seconds
-- **Social Proof Scene** (if stats/testimonials) - 5-10 seconds
+- ⚠️ **Problem Scene** (if pain point exists) - 5-10 seconds
+- ⚠️ **Features Scene** (if 3+ features) - 15-25 seconds
+- ⚠️ **Social Proof Scene** (if stats/testimonials) - 5-10 seconds
 
 ### Scene Planning Template
 
@@ -407,8 +440,18 @@ Scene 1: Hook - Logo Reveal
 **Cannot proceed to Step 4 without completing scene design.**
 
 ---
+```
 
-## Step 4: Animation Strategy (MANDATORY)
+**Lines:** ~120 lines
+
+---
+
+### SECTION 6: Step 4 - Animation Planning (NEW)
+**Status:** NEW (doesn't exist)
+
+**Add Complete Section:**
+```markdown
+## Step 4: Animation Strategy ⚠️ MANDATORY
 
 **Plan specific animations for EACH scene before coding.**
 
@@ -553,8 +596,18 @@ Slow Tempo:
 **Cannot proceed to Step 5 without completing animation planning.**
 
 ---
+```
 
-## Step 5: Transition Strategy (MANDATORY)
+**Lines:** ~140 lines
+
+---
+
+### SECTION 7: Step 5 - Transition Planning (NEW)
+**Status:** NEW (doesn't exist)
+
+**Add Complete Section:**
+```markdown
+## Step 5: Transition Strategy ⚠️ MANDATORY
 
 **Plan transitions BETWEEN every scene.**
 
@@ -593,10 +646,10 @@ Adjust scene duration to hit beat exactly
 ```
 
 **When to sync:**
-- Hook → Problem transition
-- Problem → Solution transition
-- Features → CTA transition
-- Within-scene transitions (optional)
+- ✅ Hook → Problem transition
+- ✅ Problem → Solution transition
+- ✅ Features → CTA transition
+- ⚠️ Within-scene transitions (optional)
 
 ### Transition Planning Template
 
@@ -654,43 +707,27 @@ Transition 3: Solution → Features
 **Cannot proceed to Step 6 without completing transition planning.**
 
 ---
-
-## Step 6: Write Narration Script
-
-Follow this **story arc** structure:
-
-**1. Hook (3-5 seconds)** - Grab attention
-```
-"Tired of slow deployments?"
 ```
 
-**2. Problem (5-10 seconds)** - Describe pain point
-```
-"Most teams wait hours for CI/CD pipelines to complete."
-```
+**Lines:** ~110 lines
 
-**3. Solution (10-15 seconds)** - Introduce product
-```
-"FastDeploy cuts deployment time from hours to minutes with AI-powered optimization."
-```
+---
 
-**4. Features (15-25 seconds)** - Highlight 3-5 key benefits
-```
-"One-click rollbacks keep you safe. Real-time monitoring shows exactly what's happening. Auto-scaling handles traffic spikes automatically."
-```
+### SECTION 8: Step 6 - Write Script
+**Status:** EXISTS (currently at lines 159-210)
 
-**5. Call to Action (3-5 seconds)** - Drive action
-```
-"Start deploying faster today. Visit FastDeploy.com"
-```
+**Current Content:**
+- Story arc structure ✅
+- Script writing guidelines ✅
+- Example script ❌ (remove this)
 
-**Script Writing Guidelines:**
-- **Tone**: Conversational, not robotic
-- **Pacing**: ~150 words/minute
-- **Length**: Match to video duration
-- **Voice**: Match brand personality from Step 2
-- **Avoid**: Jargon, filler words, repetition
+**Changes Required:**
+- Remove example script (lines 195-209)
+- Add script planning template
+- Add validation checklist
 
+**Replace Example Script Section With:**
+```markdown
 ### Script Planning Template
 
 **Use this structure (do NOT copy verbatim):**
@@ -733,11 +770,28 @@ Follow this **story arc** structure:
 - [ ] Matches brand voice (formal/casual based on personality)
 
 **Next Step:** Proceed to Step 7 (Generate Audio)
+```
+
+**Lines:** Remove 15 lines (example), add 40 lines = +25 lines net = ~75 lines total
 
 ---
 
-## Step 7: Generate Audio
+### SECTION 9: Step 7 - Generate Audio
+**Status:** EXISTS (currently at lines 212-240)
 
+**Current Content:**
+- MCP tool call ✅
+- Music style options ✅
+- Music selection logic ✅
+- Returns structure ✅
+
+**Changes Required:**
+- Expand music selection logic (tie to Step 2 brand personality)
+- Add "Save beats array" reminder
+- Add validation
+
+**Add Before MCP Tool Call:**
+```markdown
 ### Music Style Selection (Based on Step 2)
 
 **Use brand personality to choose music style:**
@@ -753,37 +807,10 @@ Follow this **story arc** structure:
 **Available styles:** pop, hip-hop, rap, jazz, lo-fi, ambient, cinematic, rock
 
 **Selected style:** _______________ (based on personality: _______________)
-
-**CRITICAL**: All music is **instrumental only** (NO singing, NO vocals!)
-
-### Call the MCP Tool
-
-```typescript
-const audio = await generate_audio({
-  musicStyle: "lo-fi",  // Your selected style from above
-  narrationScript: script,
-  duration: 30
-});
 ```
 
-**Returns:**
-
-```typescript
-{
-  music: {
-    url: string;
-    localPath: string;
-    duration: number;
-  },
-  narration: {
-    url: string;
-    localPath: string;
-    timecodes: Array<{ word: string; start: number; end: number }>;
-  },
-  beats: number[] // Beat timecodes in seconds
-}
-```
-
+**Add After Returns Structure:**
+```markdown
 **IMPORTANT - Save This:**
 - Store `audio.beats` array - You'll use this in Step 5 for beat-synced transitions
 - Store `audio.music.localPath` - Required for Audio component
@@ -798,10 +825,32 @@ const audio = await generate_audio({
 - [ ] audio.narration.localPath exists
 
 **Next Step:** Proceed to Step 8 (Advanced Features Decision)
+```
+
+**Lines:** Add 35 lines = ~75 lines total
 
 ---
 
-## Step 8: Advanced Features Decision (MANDATORY)
+### SECTION 10: Step 8 - Advanced Features Decision (NEW)
+**Status:** NEW (doesn't exist, currently "Advanced Features" at lines 1019-1429)
+
+**Current Advanced Features Section:**
+- Audio Visualization (lines 1023-1094)
+- Text Animations (lines 1096-1119)
+- Charts (lines 1121-1180)
+- Maps (lines 1182-1238)
+- Captions (lines 1240-1322)
+- 3D Graphics (lines 1324-1365)
+- Visual Effects (lines 1367-1429)
+
+**Changes Required:**
+- Convert from "how to use" to "when to use + decision tree"
+- Make evaluation mandatory
+- Add decision checklist
+
+**Add New Section:**
+```markdown
+## Step 8: Advanced Features Decision ⚠️ MANDATORY
 
 **Evaluate EVERY advanced feature. Decide whether to include it.**
 
@@ -996,8 +1045,65 @@ const audio = await generate_audio({
 **Cannot proceed to Step 9 without completing advanced features evaluation.**
 
 ---
+```
 
-## Step 9: Code Structure Planning (MANDATORY)
+**Lines:** ~200 lines
+
+---
+
+## Summary of Changes (Part 1)
+
+### Sections Removed:
+1. Quick Start (lines 37-112) - 75 lines removed
+2. Complete Workflow Generated.tsx example (lines 266-774) - 508 lines removed
+3. Advanced Features "how to" sections moved to Step 8 decision tree
+
+**Total Removed:** ~580 lines
+
+### Sections Added:
+1. Introduction & Philosophy - 30 lines
+2. Process Overview - 40 lines
+3. Step 2: Brand Analysis - 150 lines
+4. Step 3: Scene Design - 120 lines
+5. Step 4: Animation Planning - 140 lines
+6. Step 5: Transition Planning - 110 lines
+7. Step 8: Advanced Features Decision - 200 lines
+
+**Total Added:** ~790 lines
+
+**Net Change:** +210 lines (but much higher quality, no template code)
+
+---
+
+## Next Steps
+
+**Remaining sections to document:**
+- Step 9: Code Structure Planning (NEW)
+- Step 10: Write Remotion Code (restructure existing, remove examples)
+- Step 11: Quality Validation (NEW - 30-item checklist)
+- Step 12: Render Video (existing, minor updates)
+- Part 3: API Reference (reorganize existing)
+- Common Patterns (new, small snippets only)
+- Anti-Patterns (new, based on existing "Common Mistakes")
+
+---
+
+# Part 2: Remaining Workflow Steps
+
+## Section 11: Step 9 - Code Structure Planning
+
+**Location in new structure:** After Step 8 (Advanced Features Decision)
+
+**Type:** NEW section (mandatory planning phase before coding)
+
+**Purpose:** Force agents to plan the code structure, imports, and component organization before writing a single line of code. Prevents copying templates.
+
+**Content:**
+
+```markdown
+---
+
+## Step 9: Code Structure Planning
 
 **CRITICAL:** You MUST complete this planning phase before writing any code.
 
@@ -1052,9 +1158,9 @@ import { fitText } from '@remotion/layout-utils';
 ```
 
 **Advanced Features (based on Step 8 decisions):**
-- Audio visualization → `import { useWindowedAudioData, visualizeAudio } from '@remotion/media';`
-- Text effects → Custom implementation
-- Charts → Custom SVG or library
+- Audio visualization → `import { useAudioData, visualizeAudio } from '@remotion/media';`
+- Text effects → `import { SlideWords, FadeWords } from '@remotion/animated-text';`
+- Charts → `import { Bar, Pie, Line } from '@remotion/charts';` (hypothetical - use actual library)
 - 3D graphics → `import { ThreeCanvas } from '@remotion/three';`
 - Skia effects → `import { SkiaCanvas } from '@remotion/skia';`
 - Lottie animations → `import { Lottie } from '@remotion/lottie';`
@@ -1064,7 +1170,7 @@ import { fitText } from '@remotion/layout-utils';
 
 **Performance (for heavy videos):**
 ```typescript
-import { OffthreadVideo } from '@remotion/offthread-video';
+import { OffthreadVideo } from 'remotion';
 import { prefetch } from 'remotion';
 ```
 
@@ -1456,6 +1562,28 @@ style={{
 **Cannot proceed to Step 10 (Write Code) without completing code structure planning.**
 
 ---
+```
+
+**Lines:** ~280 lines
+
+---
+
+## Section 12: Step 10 - Write Remotion Code
+
+**Location in new structure:** After Step 9 (Code Structure Planning)
+
+**Type:** RESTRUCTURED section (remove complete example, add structure-only guidance)
+
+**Changes:**
+- Remove: 400-line Generated.tsx example (lines 266-774 in old SKILL.md)
+- Add: Code structure guidelines with NO complete examples
+- Add: References to Steps 2-9 (all decisions should be made already)
+- Add: Small code patterns (10-15 lines max, isolated snippets)
+
+**Content:**
+
+```markdown
+---
 
 ## Step 10: Write Remotion Code
 
@@ -1474,7 +1602,7 @@ style={{
 **Required structure:**
 
 ```typescript
-import React from 'react';
+import React from 'remotion';
 // Your planned imports from Step 9.1
 
 import { VideoProps } from '../Root';
@@ -1778,8 +1906,26 @@ const scale = spring({ frame, fps, from: 0.5, to: 1, config: { damping: 200 } })
 - [ ] Ready for Step 11 (Quality Validation)
 
 ---
+```
 
-## Step 11: Quality Validation (MANDATORY)
+**Lines:** ~260 lines (replaces 508-line example, net -248 lines)
+
+---
+
+## Section 13: Step 11 - Quality Validation
+
+**Location in new structure:** After Step 10 (Write Remotion Code)
+
+**Type:** NEW section (30-item mandatory quality checklist)
+
+**Purpose:** Force agents to validate their work before rendering. Catches common mistakes and ensures brand alignment.
+
+**Content:**
+
+```markdown
+---
+
+## Step 11: Quality Validation
 
 **MANDATORY:** You MUST complete this entire validation checklist before proceeding to Step 12 (Render).
 
@@ -1922,7 +2068,7 @@ This is the most important step - it prevents low-quality, generic videos.
 
 - [ ] **24. Composition registered**
   - Generated.tsx is imported in Root.tsx
-  - <Composition id="Generated" /> exists in Root.tsx
+  - <Composition id=\"Generated\" /> exists in Root.tsx
   - Default props match VideoProps interface
 
 - [ ] **25. No console errors expected**
@@ -1982,13 +2128,34 @@ If you have unchecked items:
 **Do not skip validation to "save time" - rendering a low-quality video wastes more time than fixing issues now.**
 
 ---
+```
+
+**Lines:** ~220 lines
+
+---
+
+## Section 14: Step 12 - Render Video
+
+**Location in new structure:** After Step 11 (Quality Validation)
+
+**Type:** EXISTING section (minor updates)
+
+**Changes:**
+- Add reference to Step 11 validation
+- Clarify output path
+- Update expected result format
+
+**Content:**
+
+```markdown
+---
 
 ## Step 12: Render Video
 
 **Prerequisites:**
-- Step 11 validation completed (minimum 25/30 items)
-- Generated.tsx written and saved
-- Composition registered in Root.tsx
+- ✅ Step 11 validation completed (minimum 25/30 items)
+- ✅ Generated.tsx written and saved
+- ✅ Composition registered in Root.tsx
 
 ---
 
@@ -2021,7 +2188,7 @@ render_video({
     },
     duration: 30, // or user-requested duration
   },
-  outputFileName: "product-name-promo" // descriptive filename
+  outputFileName: \"product-name-promo\" // descriptive filename
 })
 ```
 
@@ -2104,6 +2271,32 @@ You can find the video at: /Users/username/Videos/url-to-video/tabstack-promo.mp
 - Check: Remove heavy Skia/Three.js effects or reduce duration
 
 ---
+```
+
+**Lines:** ~110 lines (minor additions to existing ~95 lines, net +15 lines)
+
+---
+
+# Part 3: API Reference & Patterns
+
+## Section 15: API Reference Reorganization
+
+**Location in new structure:** After Step 12 (becomes Part 3)
+
+**Type:** REORGANIZED (existing content from lines 1433-2400, restructured by category)
+
+**Purpose:** Make API Reference easier to navigate and search. Agents can reference specific APIs when implementing features from Steps 8-10.
+
+**Changes:**
+- Group by category (not alphabetical)
+- Add "When to use" for each API
+- Keep existing code examples (these are OK - they're API docs, not templates)
+- Add cross-references to workflow steps
+
+**Content structure:**
+
+```markdown
+---
 
 # Part 3: API Reference
 
@@ -2130,41 +2323,18 @@ const frame = useCurrentFrame();
 const opacity = frame < 30 ? frame / 30 : 1; // Fade in over first 30 frames
 ```
 
-**Important:**
-- Inside a `<Sequence>`, returns the **local frame** (relative to the sequence start)
-- Inside a `<Loop>`, resets to 0 for each iteration
-- Inside a `<Freeze>`, returns the frozen frame number
-
 ---
 
 ### useVideoConfig()
 
 **When to use:** To get video dimensions, FPS, and duration
 
-**Returns:** `{ fps: number; width: number; height: number; durationInFrames: number; id: string }`
+**Returns:** `{ fps: number; width: number; height: number; durationInFrames: number }`
 
 **Example:**
 ```typescript
 const { fps, width, height } = useVideoConfig();
 const logoSize = Math.min(width, height) * 0.3; // Responsive sizing
-```
-
-**Use cases:**
-
-**1. Responsive sizing:**
-```typescript
-const { width, height } = useVideoConfig();
-
-const logoSize = Math.min(width, height) * 0.3;
-const padding = width * 0.05;
-```
-
-**2. Time calculations:**
-```typescript
-const { fps, durationInFrames } = useVideoConfig();
-
-const durationInSeconds = durationInFrames / fps;
-const halfway = durationInFrames / 2;
 ```
 
 ---
@@ -2241,212 +2411,100 @@ const position = interpolate(
 
 ---
 
-### interpolateColors()
+[Continue with all other core APIs: interpolateColors, Easing, AbsoluteFill, Sequence, Series, Loop, Freeze, Still, etc.]
 
-**When to use:** Smoothly interpolate between two colors (hex, rgb, rgba, hsl)
-
-**Example:**
-```typescript
-import { interpolateColors } from 'remotion';
-
-const color = interpolateColors(
-  frame,
-  [0, 100],
-  ['#ff0000', '#0000ff'] // red to blue
-);
-```
-
-**Supported color formats:**
-```typescript
-// Hex colors
-interpolateColors(frame, [0, 100], ['#ff0000', '#0000ff']);
-
-// RGB
-interpolateColors(frame, [0, 100], ['rgb(255, 0, 0)', 'rgb(0, 0, 255)']);
-
-// RGBA (with opacity)
-interpolateColors(frame, [0, 100], ['rgba(255, 0, 0, 1)', 'rgba(0, 0, 255, 0.5)']);
-
-// HSL
-interpolateColors(frame, [0, 100], ['hsl(0, 100%, 50%)', 'hsl(240, 100%, 50%)']);
-```
-
-**Multi-color gradients:**
-```typescript
-// Fade through multiple colors
-const color = interpolateColors(
-  frame,
-  [0, 50, 100],
-  ['#ff0000', '#00ff00', '#0000ff'] // red → green → blue
-);
-```
+[Keep existing explanations and examples from old SKILL.md lines 1433+]
 
 ---
 
-### AbsoluteFill
+## Media APIs
 
-**When to use:** A layout component that fills the entire composition space - use as root container for scenes
+### Audio (from @remotion/media)
+
+**When to use:** For music, narration, or sound effects
 
 **Example:**
 ```typescript
-import { AbsoluteFill } from 'remotion';
+import { Audio } from '@remotion/media';
 
-<AbsoluteFill
+<Audio src={audio.music.localPath} volume={0.8} />
+```
+
+**Props:**
+- `src` - Audio file path
+- `volume` - 0.0 to 1.0 (default: 1.0)
+- `startFrom` - Frame to start playback
+- `endAt` - Frame to end playback
+
+---
+
+### Img
+
+**When to use:** For logos, screenshots, or images
+
+**Example:**
+```typescript
+import { Img } from 'remotion';
+
+<Img
+  src={branding.logo.url}
   style={{
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 300,
+    height: 300,
+    objectFit: 'contain',
   }}
->
-  <h1>Centered Content</h1>
-</AbsoluteFill>
+/>
 ```
 
-**What it does:**
-- Sets `position: absolute`
-- Sets `top: 0`, `left: 0`, `right: 0`, `bottom: 0`
-- Sets `width: 100%`, `height: 100%`
-- Adds `display: flex` by default
-
-**Common patterns:**
-
-**Centered content:**
-```typescript
-<AbsoluteFill
-  style={{
-    justifyContent: 'center',
-    alignItems: 'center',
-  }}
->
-  <Logo />
-</AbsoluteFill>
-```
-
-**Background + foreground layers:**
-```typescript
-<>
-  {/* Background layer */}
-  <AbsoluteFill style={{ backgroundColor: '#000' }} />
-
-  {/* Foreground content */}
-  <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center' }}>
-    <Content />
-  </AbsoluteFill>
-</>
-```
+**IMPORTANT:** Use `Img` instead of `<img>` for better rendering performance.
 
 ---
 
-### Sequence
+### OffthreadVideo
 
-**When to use:** Display content for a specific time range
+**When to use:** For embedding video clips (better performance than `<Video>`)
+
+[Include existing documentation]
+
+---
+
+[Continue with all media APIs]
+
+---
+
+## Layout & Text APIs
+
+### fitText() (from @remotion/layout-utils)
+
+**When to use:** When text length is variable and must fit within a fixed width
 
 **Example:**
 ```typescript
-import { Sequence } from 'remotion';
+import { fitText } from '@remotion/layout-utils';
 
-<Sequence from={0} durationInFrames={90}>
-  <Scene1 />
-</Sequence>
+const { fontSize } = fitText({
+  text: content.title,
+  withinWidth: width * 0.8,
+  fontFamily: branding.font,
+  fontWeight: 'bold',
+});
 
-<Sequence from={90} durationInFrames={150}>
-  <Scene2 />
-</Sequence>
-```
-
-**Props:**
-- `from` - Start frame (required)
-- `durationInFrames` - Duration in frames (optional)
-- `name` - Label for timeline (optional)
-- `layout` - `"absolute-fill"` (default) or `"none"`
-
----
-
-### Easing
-
-**When to use:** Custom timing curves for interpolate()
-
-**Available easing functions:**
-```typescript
-import { Easing } from 'remotion';
-
-// Basic easing
-Easing.linear
-Easing.ease
-Easing.quad
-Easing.cubic
-
-// Directional
-Easing.in(Easing.quad)      // Accelerate
-Easing.out(Easing.quad)     // Decelerate
-Easing.inOut(Easing.quad)   // Accelerate then decelerate
-
-// Special effects
-Easing.bounce               // Bouncy landing
-Easing.elastic(1)           // Elastic spring
-Easing.back(1.5)            // Overshoot effect
-
-// Bezier (custom curve)
-Easing.bezier(0.42, 0, 0.58, 1) // Custom cubic bezier
+<div style={{ fontSize }}>{content.title}</div>
 ```
 
 ---
 
-## Sequencing APIs
-
-### Loop
-
-**When to use:** Repeat animations for a specified number of times or infinitely
-
-```typescript
-import { Loop } from 'remotion';
-
-<Loop durationInFrames={50} times={3}>
-  <Animation />
-</Loop>
-
-// Infinite loop
-<Loop durationInFrames={50}>
-  <Animation />
-</Loop>
-```
-
-**Props:**
-- `durationInFrames` - Frame count for each iteration (required)
-- `times` - Number of repetitions (default: `Infinity`)
-- `layout` - `"absolute-fill"` (default) or `"none"`
+[Continue with layout APIs]
 
 ---
 
-### Freeze
-
-**When to use:** Hold a specific frame while the rest of the timeline progresses
-
-```typescript
-import { Freeze } from 'remotion';
-
-<Freeze frame={30}>
-  <BlueSquare />
-</Freeze>
-```
-
-**Props:**
-- `frame` - Frame number to freeze at (required)
-- `active` - Boolean or callback to conditionally disable freezing
-
-**Effects:**
-- `useCurrentFrame()` inside always returns the specified frame
-- `<Video>` elements are paused
-- `<Audio>` elements are muted
-
----
-
-## Transition APIs
+## Transition APIs (from @remotion/transitions)
 
 ### TransitionSeries
 
 **When to use:** For smooth scene transitions (Step 5 decision)
 
+**Example:**
 ```typescript
 import { TransitionSeries, linearTiming } from '@remotion/transitions';
 import { fade } from '@remotion/transitions/fade';
@@ -2484,528 +2542,159 @@ import { fade } from '@remotion/transitions/fade';
 **flip({ direction })** - 3D flip
 - Directions: `'horizontal'`, `'vertical'`
 
----
-
-## Media APIs
-
-### Audio
-
-**When to use:** For music, narration, or sound effects
-
-```typescript
-import { Audio } from '@remotion/media';
-
-<Audio src={audio.music.localPath} volume={0.8} />
-```
-
-**Props:**
-- `src` - Audio file path
-- `volume` - 0.0 to 1.0 (default: 1.0)
-- `startFrom` - Frame to start playback
-- `endAt` - Frame to end playback
-
-**Important:** Always import from `@remotion/media`, not `remotion`
-
----
-
-### Img
-
-**When to use:** For logos, screenshots, or images
-
-```typescript
-import { Img } from 'remotion';
-
-<Img
-  src={branding.logo.url}
-  style={{
-    width: 300,
-    height: 300,
-    objectFit: 'contain',
-  }}
-/>
-```
-
-**IMPORTANT:** Use `Img` instead of `<img>` for better rendering performance.
-
----
-
-### OffthreadVideo
-
-**When to use:** Performance-optimized video component for embedding videos
-
-```bash
-npx remotion add @remotion/offthread-video
-```
-
-```typescript
-import { OffthreadVideo } from '@remotion/offthread-video';
-import { staticFile } from 'remotion';
-
-<OffthreadVideo src={staticFile('video.mp4')} />
-```
-
-**Why use OffthreadVideo?**
-- Faster rendering - Video decoding happens off the main thread
-- Better performance - Doesn't block other rendering operations
-- Same API - Works like regular `<Video>` component
-
-**When to use:**
-- Embedding multiple videos in one composition
-- Large video files (better performance)
-- Complex compositions with many elements
-- NOT for browser playback (renders only)
-
----
-
-## Layout & Text APIs
-
-### fitText()
-
-**When to use:** When text length is variable and must fit within a fixed width
-
-```bash
-npx remotion add @remotion/layout-utils
-```
-
-```typescript
-import { fitText } from '@remotion/layout-utils';
-
-const { fontSize } = fitText({
-  text: content.title,
-  withinWidth: width * 0.8,
-  fontFamily: branding.font,
-  fontWeight: 'bold',
-});
-
-<div style={{ fontSize }}>{content.title}</div>
-```
-
----
-
-### measureText()
-
-**When to use:** Get text dimensions
-
-```typescript
-import { measureText } from '@remotion/layout-utils';
-
-const { width, height } = measureText({
-  text: 'Hello World',
-  fontFamily: 'Arial',
-  fontSize: 32,
-  fontWeight: 'bold',
-});
-```
+[Include all transition types with examples]
 
 ---
 
 ## Advanced Feature APIs
 
-### Audio Visualization
+### Audio Visualization (from @remotion/media)
 
 **When to use:** Decided in Step 8 (music videos, audio-heavy content)
 
-```bash
-npx remotion add @remotion/media
-```
+**APIs:**
+- `useAudioData()` - Get audio frequency data
+- `visualizeAudio()` - Process audio data for visualization
 
-**useWindowedAudioData() - Get audio frequency data for current frame:**
+**Referenced from:** remotion-best-practices/rules/audio-visualization.md
 
-```typescript
-import { useWindowedAudioData, visualizeAudio } from '@remotion/media';
-import { Audio } from '@remotion/media';
-
-const MyComponent = () => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const audioData = useWindowedAudioData({
-    src: audio.music.localPath,
-    startFrom: 0,
-  });
-
-  if (!audioData) return null;
-
-  const visualization = visualizeAudio({
-    fps,
-    frame,
-    audioData,
-    numberOfSamples: 128, // Number of frequency bars
-  });
-
-  // visualization is an array of values (0-1) for each frequency bar
-  return (
-    <>
-      <Audio src={audio.music.localPath} />
-      <div style={{ display: 'flex', alignItems: 'flex-end', height: 200 }}>
-        {visualization.map((value, i) => (
-          <div
-            key={i}
-            style={{
-              width: 10,
-              height: value * 200,
-              backgroundColor: 'white',
-              marginRight: 2,
-            }}
-          />
-        ))}
-      </div>
-    </>
-  );
-};
-```
+[Include existing documentation with reference to where it's used in workflow]
 
 ---
 
-### 3D Graphics
+### 3D Graphics (from @remotion/three)
 
 **When to use:** Decided in Step 8 (product showcases, tech demos)
 
-```bash
-npx remotion add @remotion/three
-npm i three @react-three/fiber @react-three/drei
-```
+**APIs:**
+- `ThreeCanvas` - Canvas for Three.js content
+- Integration with React Three Fiber
 
-**Basic 3D scene:**
+**Referenced from:** remotion-best-practices/rules/3d.md
 
-```typescript
-import { ThreeCanvas } from '@remotion/three';
-import { useCurrentFrame } from 'remotion';
-
-const MyComponent = () => {
-  const frame = useCurrentFrame();
-
-  return (
-    <ThreeCanvas>
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} />
-      <mesh rotation={[0, frame * 0.01, 0]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="orange" />
-      </mesh>
-    </ThreeCanvas>
-  );
-};
-```
-
-**Load 3D models (GLTF/GLB):**
-
-```typescript
-import { useGLTF } from '@react-three/drei';
-import { staticFile } from 'remotion';
-
-const Model = () => {
-  const { scene } = useGLTF(staticFile('model.glb'));
-  return <primitive object={scene} />;
-};
-```
+[Include existing documentation]
 
 ---
 
-### Captions and Subtitles
-
-**When to use:** Decided in Step 8 (social media videos, accessibility)
-
-```bash
-npx remotion add @remotion/captions
-```
-
-**TikTok-style captions:**
-
-```typescript
-import { createTikTokStyleCaptions } from '@remotion/captions';
-import { useDelayRender } from 'remotion';
-import { useState, useEffect } from 'react';
-
-const MyComponent = () => {
-  const { delayRender, continueRender } = useDelayRender();
-  const [handle] = useState(() => delayRender());
-  const [captions, setCaptions] = useState(null);
-
-  useEffect(() => {
-    fetch('/captions.json')
-      .then((res) => res.json())
-      .then((data) => {
-        setCaptions(data);
-        continueRender(handle);
-      });
-  }, [handle, continueRender]);
-
-  if (!captions) return null;
-
-  const { pages } = createTikTokStyleCaptions({
-    captions,
-    combineTokensWithinMilliseconds: 200,
-  });
-
-  return <div>{/* Render pages */}</div>;
-};
-```
-
----
-
-### Skia Effects
+### Skia Effects (from @remotion/skia)
 
 **When to use:** Decided in Step 8 (custom graphics, blur, gradients)
 
-```bash
-npx remotion add @remotion/skia
-npm i @shopify/react-native-skia
-```
+**Referenced from:** remotion-best-practices/rules/ (Skia-related)
 
-```typescript
-import { SkiaCanvas } from '@remotion/skia';
-import { Circle, Group } from '@shopify/react-native-skia';
-
-const MyComponent = () => {
-  const frame = useCurrentFrame();
-
-  return (
-    <SkiaCanvas width={1920} height={1080}>
-      <Group>
-        <Circle cx={frame * 5} cy={100} r={50} color="blue" />
-      </Group>
-    </SkiaCanvas>
-  );
-};
-```
+[Include existing documentation]
 
 ---
 
-### Lottie Animations
+### Lottie Animations (from @remotion/lottie)
 
 **When to use:** Decided in Step 8 (existing animations, character animations)
 
-```bash
-npx remotion add @remotion/lottie
-npm i lottie-web
-```
+**Referenced from:** remotion-best-practices/rules/lottie.md
 
-```typescript
-import { Lottie } from '@remotion/lottie';
-import { staticFile } from 'remotion';
-import { useState, useEffect } from 'react';
-
-const MyComponent = () => {
-  const [animationData, setAnimationData] = useState(null);
-
-  useEffect(() => {
-    fetch(staticFile('animation.json'))
-      .then((res) => res.json())
-      .then(setAnimationData);
-  }, []);
-
-  if (!animationData) return null;
-
-  return <Lottie animationData={animationData} />;
-};
-```
+[Include existing documentation]
 
 ---
 
-### Visual Effects
+### Charts (hypothetical - use actual charting library)
 
-**Light leaks (cinematic overlay effects):**
+**When to use:** Decided in Step 8 (data-heavy content, statistics)
 
-```bash
-npx remotion add @remotion/light-leaks
-```
-
-```typescript
-import { TransitionSeries } from '@remotion/transitions';
-import { LightLeak } from '@remotion/light-leaks';
-
-<TransitionSeries>
-  <TransitionSeries.Sequence durationInFrames={60}>
-    <SceneA />
-  </TransitionSeries.Sequence>
-
-  <TransitionSeries.Overlay durationInFrames={30}>
-    <LightLeak seed={5} hueShift={240} /> {/* Blue-tinted */}
-  </TransitionSeries.Overlay>
-
-  <TransitionSeries.Sequence durationInFrames={60}>
-    <SceneB />
-  </TransitionSeries.Sequence>
-</TransitionSeries>
-```
-
-**Noise and texture effects:**
-
-```bash
-npx remotion add @remotion/noise
-```
-
-```typescript
-import { noise2D } from '@remotion/noise';
-
-const MyComponent = () => {
-  const frame = useCurrentFrame();
-
-  // 2D noise: returns value between -1 and 1
-  const noiseValue = noise2D('seed', frame * 0.01, 0);
-
-  return (
-    <div style={{ opacity: (noiseValue + 1) / 2 }}>
-      Animated texture
-    </div>
-  );
-};
-```
+[Include chart examples]
 
 ---
 
-## Utility APIs
+### Captions/Subtitles
 
-### staticFile()
+**When to use:** Decided in Step 8 (social media videos, accessibility)
 
-**When to use:** Reference files in the `public/` folder
+**Referenced from:** remotion-best-practices/rules/subtitles.md
 
-```typescript
-import { Img, staticFile } from 'remotion';
-
-const myImage = staticFile('/my-image.png');
-<Img src={myImage} />
-```
-
-**Setup:**
-- Create a `public/` folder at project root (same directory as `package.json`)
-- Store assets like images, fonts, and audio files in this folder
-
-**Returns:** Encoded URL reference: `/static-32e8nd/my-image.png`
+[Include existing documentation]
 
 ---
 
-### random()
+### Mapbox Integration
 
-**When to use:** Deterministic pseudorandom values for consistent rendering
+**When to use:** Decided in Step 8 (location-based content)
 
-```typescript
-import { random } from 'remotion';
+**Referenced from:** remotion-best-practices/rules/maps.md
 
-const rand = random(1); // Always returns 0.07301638228818774
-const rand2 = random('my-seed'); // Consistent output for same seed
-
-// Example: Random coordinates
-const randomCoordinates = new Array(10).fill(true).map((a, i) => ({
-  x: random(`random-x-${i}`),
-  y: random(`random-y-${i}`),
-}));
-```
-
-**Why use this?** `Math.random()` produces inconsistent values during multi-threaded rendering.
+[Include existing documentation]
 
 ---
 
-### prefetch()
+## Performance APIs
 
-**When to use:** Preload images and assets before they appear on screen
+### Prefetch
 
-```typescript
-import { prefetch } from 'remotion';
-import { useEffect } from 'react';
+**When to use:** For preloading large assets (images, videos)
 
-const MyComponent = () => {
-  useEffect(() => {
-    // Prefetch images
-    const { free, waitUntilDone } = prefetch('https://example.com/image.png');
-
-    // Optional: wait for prefetch to complete
-    waitUntilDone().then(() => {
-      console.log('Image preloaded!');
-    });
-
-    // Cleanup
-    return () => {
-      free();
-    };
-  }, []);
-
-  return <img src="https://example.com/image.png" />;
-};
-```
-
----
-
-### delayRender() / continueRender()
-
-**When to use:** Pause rendering for async operations like data fetching or font loading
-
-```typescript
-import { useDelayRender } from 'remotion';
-import { useState, useEffect } from 'react';
-
-const MyComponent = () => {
-  const { delayRender, continueRender, cancelRender } = useDelayRender();
-  const [handle] = useState(() => delayRender());
-
-  useEffect(() => {
-    fetchData()
-      .then(() => continueRender(handle))
-      .catch((err) => cancelRender(err));
-  }, [handle]);
-
-  return <div>Content</div>;
-};
-```
-
-**Important:**
-- Must call `continueRender()` within 30 seconds or rendering fails
-- Use `useDelayRender()` hook (recommended) over direct `delayRender()` import
-- Call `delayRender()` inside `useState()` to avoid creating multiple handles
+[Include existing documentation]
 
 ---
 
 ### getRemotionEnvironment()
 
-**When to use:** Detect the current Remotion environment (rendering, preview, or regular browser)
+**When to use:** Detect rendering vs preview mode
 
-```typescript
-import { getRemotionEnvironment } from 'remotion';
-
-const env = getRemotionEnvironment();
-
-if (env.isRendering) {
-  console.log('Rendering video...');
-}
-
-if (env.isPlayer) {
-  console.log('In Remotion Player');
-}
-
-if (env.isStudio) {
-  console.log('In Remotion Studio');
-}
-```
-
-**Returns:**
-```typescript
-{
-  isRendering: boolean;  // True during npx remotion render
-  isPlayer: boolean;     // True in Remotion Player
-  isStudio: boolean;     // True in Remotion Studio (preview)
-}
-```
+[Include existing documentation]
 
 ---
 
+## Utility APIs
+
 ### getInputProps()
 
-**When to use:** Get the props passed to a composition programmatically
+**When to use:** Access composition props from CLI
 
-```typescript
-import { getInputProps } from 'remotion';
+[Include existing documentation]
 
-const MyComponent = () => {
-  const inputProps = getInputProps();
+---
 
-  console.log(inputProps);
-  // { title: 'My Video', color: '#ff0000' }
+### getVideoMetadata()
 
-  return <div>{inputProps.title}</div>;
-};
+**When to use:** Get video file dimensions and duration
+
+**Referenced from:** remotion-best-practices/rules/get-video-duration.md, get-video-dimensions.md
+
+[Include existing documentation]
+
+---
+
+### getAudioData()
+
+**When to use:** Get audio file duration
+
+**Referenced from:** remotion-best-practices/rules/get-audio-duration.md
+
+[Include existing documentation]
+
+---
 ```
 
+**Lines:** ~400 lines (reorganized from existing ~1000 lines, condensed with cross-references)
+
+**Changes:**
+- Grouped by category (Core, Media, Layout, Transitions, Advanced, Performance, Utility)
+- Added "When to use" for each API
+- Added cross-references to remotion-best-practices rules
+- Kept essential examples, removed redundant ones
+- Added references to workflow steps (Step 8, Step 10, etc.)
+
+---
+
+## Section 16: Common Patterns
+
+**Location in new structure:** After API Reference
+
+**Type:** NEW section (replaces scattered examples throughout old SKILL.md)
+
+**Purpose:** Provide small, isolated code snippets for common animation patterns. NOT full scenes.
+
+**Content:**
+
+```markdown
 ---
 
 ## Common Patterns
@@ -3177,6 +2866,24 @@ const opacity = relativeFrame < 0
 **Remember:** These are individual techniques. Combine them creatively based on your Step 4 (Animation Planning) decisions.
 
 ---
+```
+
+**Lines:** ~130 lines
+
+---
+
+## Section 17: Anti-Patterns
+
+**Location in new structure:** After Common Patterns
+
+**Type:** NEW section (based on existing "Common Mistakes to Avoid")
+
+**Purpose:** Explicitly show what NOT to do. Helps agents avoid common pitfalls.
+
+**Content:**
+
+```markdown
+---
 
 ## Anti-Patterns (What NOT to Do)
 
@@ -3184,7 +2891,7 @@ const opacity = relativeFrame < 0
 
 ---
 
-### Anti-Pattern 1: Using Hardcoded Colors
+### ❌ Anti-Pattern 1: Using Hardcoded Colors
 
 **Problem:** Ignores extracted brand colors, creates generic-looking videos
 
@@ -3206,12 +2913,12 @@ const opacity = relativeFrame < 0
 
 ---
 
-### Anti-Pattern 2: Copying Template Code
+### ❌ Anti-Pattern 2: Copying Template Code
 
 **Problem:** Results in generic videos that look identical for different brands
 
 **Wrong:**
-- Copying entire example code
+- Copying the entire Generated.tsx example
 - Using hardcoded scene structure (5 scenes, specific durations)
 - Generic animations that don't match brand personality
 
@@ -3222,7 +2929,7 @@ const opacity = relativeFrame < 0
 
 ---
 
-### Anti-Pattern 3: Using CSS Animations
+### ❌ Anti-Pattern 3: Using CSS Animations
 
 **Problem:** CSS animations auto-play and cause flickering/timing issues in Remotion
 
@@ -3249,7 +2956,7 @@ const translateX = spring({ frame, fps, from: -500, to: 0 });
 
 ---
 
-### Anti-Pattern 4: Not Using useCurrentFrame()
+### ❌ Anti-Pattern 4: Not Using useCurrentFrame()
 
 **Problem:** Animations won't be tied to video timeline, causes render issues
 
@@ -3272,7 +2979,7 @@ const opacity = spring({ frame, fps, from: 0, to: 1 });
 
 ---
 
-### Anti-Pattern 5: Ignoring Responsive Sizing
+### ❌ Anti-Pattern 5: Ignoring Responsive Sizing
 
 **Problem:** Text overflows or is too small, elements get cut off
 
@@ -3301,7 +3008,7 @@ const { fontSize } = fitText({
 
 ---
 
-### Anti-Pattern 6: Skipping Planning Steps
+### ❌ Anti-Pattern 6: Skipping Planning Steps
 
 **Problem:** Results in poor design decisions, requires rework
 
@@ -3318,7 +3025,7 @@ const { fontSize } = fitText({
 
 ---
 
-### Anti-Pattern 7: Using Framer Motion or react-spring
+### ❌ Anti-Pattern 7: Using Framer Motion or react-spring
 
 **Problem:** These libraries are not compatible with Remotion's rendering
 
@@ -3340,7 +3047,7 @@ const opacity = spring({ frame, fps, from: 0, to: 1 });
 
 ---
 
-### Anti-Pattern 8: Not Checking Advanced Features
+### ❌ Anti-Pattern 8: Not Checking Advanced Features
 
 **Problem:** Missing opportunities for high-quality visuals
 
@@ -3356,7 +3063,7 @@ const opacity = spring({ frame, fps, from: 0, to: 1 });
 
 ---
 
-### Anti-Pattern 9: Hardcoding Frame Numbers
+### ❌ Anti-Pattern 9: Hardcoding Frame Numbers
 
 **Problem:** Breaks when video duration changes
 
@@ -3377,7 +3084,7 @@ const problemDuration = 5 * fps;
 
 ---
 
-### Anti-Pattern 10: Skipping Quality Validation
+### ❌ Anti-Pattern 10: Skipping Quality Validation
 
 **Problem:** Renders low-quality video, wastes time re-rendering
 
@@ -3393,7 +3100,7 @@ const problemDuration = 5 * fps;
 
 ---
 
-### Anti-Pattern 11: Missing Audio Files
+### ❌ Anti-Pattern 11: Missing Audio Files
 
 **Problem:** Render fails or produces silent video
 
@@ -3410,7 +3117,7 @@ const problemDuration = 5 * fps;
 
 ---
 
-### Anti-Pattern 12: Not Registering Composition
+### ❌ Anti-Pattern 12: Not Registering Composition
 
 **Problem:** "Composition not found" error when rendering
 
@@ -3434,3 +3141,304 @@ import { Generated } from './compositions/Generated';
 ```
 
 ---
+```
+
+**Lines:** ~200 lines
+
+---
+
+# Final Summary
+
+## Complete Line Count Changes
+
+### Sections Removed (Total: ~580 lines)
+1. **Quick Start** (lines 37-112) - 75 lines
+   - Removed: Generic quick start that encourages skipping planning
+2. **Complete Workflow Example** (lines 266-774) - 508 lines
+   - Removed: Full Generated.tsx example that agents copy as template
+
+### Sections Added (Total: ~1,310 lines)
+1. **Introduction & Philosophy** - 30 lines NEW
+2. **Process Overview** - 40 lines NEW
+3. **Step 2: Brand Analysis** - 150 lines NEW (mandatory design phase)
+4. **Step 3: Scene Design** - 120 lines NEW (mandatory design phase)
+5. **Step 4: Animation Planning** - 140 lines NEW (mandatory design phase)
+6. **Step 5: Transition Planning** - 110 lines NEW (mandatory design phase)
+7. **Step 6: Write Script** - +25 lines (existing + improvements)
+8. **Step 7: Generate Audio** - +35 lines (existing + improvements)
+9. **Step 8: Advanced Features Decision** - 200 lines NEW (mandatory evaluation)
+10. **Step 9: Code Structure Planning** - 280 lines NEW (mandatory before coding)
+11. **Step 10: Write Remotion Code** - 260 lines (replaces 508-line example, -248 net)
+12. **Step 11: Quality Validation** - 220 lines NEW (30-item checklist)
+13. **Step 12: Render Video** - +15 lines (existing + improvements)
+14. **API Reference** - -600 lines (reorganized, condensed, cross-referenced)
+15. **Common Patterns** - 130 lines NEW (isolated snippets)
+16. **Anti-Patterns** - 200 lines NEW (what NOT to do)
+
+### Net Change
+- **Total removed:** 580 lines
+- **Total added:** 1,310 lines
+- **Net change:** +730 lines
+
+### Quality Improvements
+- **Mandatory design phases:** 5 (Steps 2-5, Step 8) - 720 lines
+- **Mandatory planning phase:** 1 (Step 9) - 280 lines
+- **Mandatory validation:** 1 (Step 11) - 220 lines
+- **Total quality enforcement:** 1,220 lines of mandatory steps
+- **Template code removed:** 508 lines (Generated.tsx example)
+- **Small patterns added:** 130 lines (isolated snippets only)
+
+---
+
+## File Structure Comparison
+
+### Old Structure (2,489 lines)
+```
+1. Introduction & Overview (1-36)
+2. Quick Start (37-112) ❌ REMOVED
+3. When to Use (113-157)
+4. Video Capabilities (158-192)
+5. Complete Workflow (193-265)
+   - Step 1: Extract (266-299)
+   - Step 2: Generate Script (300-485) [includes long example]
+   - Step 3: Analyze & Design (486-545) [minimal guidance]
+   - Step 4: Design Scenes (546-600) [minimal guidance]
+   - Step 5: Generate Audio (601-660)
+   - Step 6: Write Remotion Code (661-774) ❌ FULL EXAMPLE TO COPY
+   - Step 7: Register Composition (775-828)
+   - Step 8: Render (829-878)
+6. Core Features (879-1018) [comes AFTER workflow, often skipped]
+7. Advanced Techniques (1019-1429) [buried at end, ignored]
+8. API Reference (1433-2400) [huge, unorganized]
+9. Tips for Success (2401-2450)
+10. Common Mistakes (2451-2489)
+```
+
+**Problems:**
+- Quick Start encourages skipping planning (line 37)
+- Template example invites copying (line 266-774, 508 lines)
+- No brand analysis phase
+- No scene/animation planning phases
+- Core features come AFTER workflow (agents skip)
+- Advanced features buried at end (agents ignore)
+- No validation checklist
+- API Reference is massive and unorganized
+
+---
+
+### New Structure (~3,220 lines)
+```
+# Part 1: Introduction & Overview
+
+1. Introduction & Philosophy (NEW - 30 lines)
+   - Quality-first approach
+   - No template copying
+   - Brand-driven design
+
+2. Process Overview (NEW - 40 lines)
+   - 12-step workflow summary
+   - Mandatory design phases highlighted
+   - Time investment expectations
+
+3. When to Use (existing ~50 lines)
+
+4. Video Capabilities (existing ~40 lines)
+
+---
+
+# Part 2: Complete Workflow (12 Steps)
+
+## Planning Phase (Steps 1-5)
+
+5. Step 1: Extract Content (existing ~70 lines)
+   - No changes (works well)
+
+6. Step 2: Brand Analysis (NEW - 150 lines) ✅ MANDATORY DESIGN
+   - Analyze personality, style, tone
+   - Document visual direction
+   - Validation checkpoint
+
+7. Step 3: Scene Design (NEW - 120 lines) ✅ MANDATORY DESIGN
+   - Determine scene count & structure
+   - Define scene purposes
+   - Calculate durations
+   - Validation checkpoint
+
+8. Step 4: Animation Planning (NEW - 140 lines) ✅ MANDATORY DESIGN
+   - Choose animation types for each scene
+   - Match animations to brand personality
+   - Avoid repetition
+   - Validation checkpoint
+
+9. Step 5: Transition Planning (NEW - 110 lines) ✅ MANDATORY DESIGN
+   - Select transition types
+   - Plan timing
+   - Consider beat sync
+   - Validation checkpoint
+
+## Content Creation Phase (Steps 6-7)
+
+10. Step 6: Write Script (existing + 25 lines)
+    - Story arc structure
+    - Remove complete script examples
+    - Add script templates instead
+
+11. Step 7: Generate Audio (existing + 35 lines)
+    - Music style selection logic
+    - Beat detection explanation
+    - Audio sync tips
+
+## Advanced Features Phase (Step 8)
+
+12. Step 8: Advanced Features Decision (NEW - 200 lines) ✅ MANDATORY EVALUATION
+    - 7 feature categories with decision trees
+    - When to use each feature
+    - Validation checkpoint
+    - Prevents ignoring advanced features
+
+## Implementation Phase (Steps 9-12)
+
+13. Step 9: Code Structure Planning (NEW - 280 lines) ✅ MANDATORY BEFORE CODING
+    - Plan imports
+    - Plan component structure
+    - Plan props & data flow
+    - Plan frame timing
+    - Plan responsive sizing
+    - Plan animation logic
+    - Validation checkpoint
+    - Prevents jumping straight to code
+
+14. Step 10: Write Remotion Code (260 lines, -248 net)
+    - ❌ REMOVED: 508-line Generated.tsx example
+    - ✅ ADDED: Code structure guidelines
+    - ✅ ADDED: Implementation checklist
+    - ✅ ADDED: References to Steps 2-9
+    - Small patterns only (10-20 lines max)
+
+15. Step 11: Quality Validation (NEW - 220 lines) ✅ MANDATORY BEFORE RENDER
+    - 30-item validation checklist
+    - Brand alignment (10 items)
+    - Content accuracy (5 items)
+    - Animation quality (5 items)
+    - Technical correctness (5 items)
+    - Production quality (5 items)
+    - Minimum 25/30 required to render
+    - Prevents low-quality renders
+
+16. Step 12: Render Video (existing + 15 lines)
+    - Reference to Step 11 validation
+    - Updated result format
+    - Troubleshooting guide
+
+---
+
+# Part 3: API Reference & Patterns
+
+17. API Reference (reorganized, -600 net)
+    - Grouped by category (Core, Media, Layout, Transitions, Advanced, Performance, Utility)
+    - Added "When to use" for each API
+    - Cross-references to workflow steps
+    - Cross-references to remotion-best-practices rules
+    - Condensed redundant examples
+
+18. Common Patterns (NEW - 130 lines)
+    - ✅ SMALL snippets only (10-20 lines max)
+    - Fade in, slide, scale, stagger, typewriter, pulse, etc.
+    - NOT full scenes or templates
+    - Reference techniques only
+
+19. Anti-Patterns (NEW - 200 lines)
+    - ❌ What NOT to do
+    - 12 common mistakes with explanations
+    - Shows wrong vs correct code
+    - Prevents common pitfalls
+
+---
+
+**Total:** ~3,220 lines
+```
+
+**Improvements:**
+- ✅ 5 mandatory design phases (Steps 2-5, 8) - 720 lines
+- ✅ 1 mandatory planning phase (Step 9) - 280 lines
+- ✅ 1 mandatory validation (Step 11) - 220 lines
+- ✅ Template code removed - 508 lines
+- ✅ API Reference organized and condensed
+- ✅ Small patterns provided (not full examples)
+- ✅ Anti-patterns explicitly listed
+
+---
+
+## Implementation Checklist
+
+**To apply these changes to SKILL.md:**
+
+- [ ] Create backup of current SKILL.md
+- [ ] Remove Quick Start section (lines 37-112)
+- [ ] Remove Generated.tsx example (lines 266-774)
+- [ ] Add Introduction & Philosophy (Section 1)
+- [ ] Add Process Overview (Section 2)
+- [ ] Add Step 2: Brand Analysis (Section 6)
+- [ ] Add Step 3: Scene Design (Section 7)
+- [ ] Add Step 4: Animation Planning (Section 8)
+- [ ] Add Step 5: Transition Planning (Section 9)
+- [ ] Update Step 6: Write Script (remove examples, add templates)
+- [ ] Update Step 7: Generate Audio (add selection logic)
+- [ ] Add Step 8: Advanced Features Decision (Section 12)
+- [ ] Add Step 9: Code Structure Planning (Section 13)
+- [ ] Rewrite Step 10: Write Remotion Code (remove example, add guidelines)
+- [ ] Add Step 11: Quality Validation (Section 15)
+- [ ] Update Step 12: Render Video (add validation reference)
+- [ ] Reorganize API Reference by category (Section 17)
+- [ ] Add Common Patterns section (Section 18)
+- [ ] Add Anti-Patterns section (Section 19)
+- [ ] Verify all cross-references work
+- [ ] Test that workflow is linear and clear
+- [ ] Commit and push to GitHub
+
+---
+
+## Expected Outcomes
+
+**After applying these changes:**
+
+1. **Agents will be forced to plan before coding**
+   - 5 design phases with validation checkpoints
+   - Cannot skip to coding (Step 10 requires Steps 2-9)
+
+2. **No more template copying**
+   - 508-line example removed
+   - Only small isolated patterns provided
+   - Each video will be unique
+
+3. **Advanced features will be evaluated**
+   - Step 8 is mandatory
+   - Decision trees for 7 feature categories
+   - Features integrated into design (not afterthought)
+
+4. **Quality will be enforced**
+   - 30-item validation checklist (Step 11)
+   - Minimum 25/30 required to render
+   - Catches brand misalignment, broken animations, technical errors
+
+5. **API Reference will be usable**
+   - Organized by category
+   - "When to use" guidance
+   - Cross-references to workflow steps
+
+6. **Common mistakes will be avoided**
+   - 12 anti-patterns explicitly listed
+   - Shows wrong vs correct code
+   - Prevents CSS animations, hardcoded colors, etc.
+
+---
+
+## Next Step
+
+**Apply all documented changes to `/Users/bella/Cooking/remotion/url-to-video-mcp/skill/SKILL.md`**
+
+This will be a major restructuring (3,220 lines total, +730 net change). The file will be significantly better organized and will enforce quality through mandatory design and validation phases.
+
+---
+
+**END OF RESTRUCTURING PLAN**
