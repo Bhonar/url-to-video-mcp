@@ -4,16 +4,11 @@
   "description": "Transform landing pages into motion graphics videos using AI",
   "type": "module",
   "scripts": {
-    "test": "node test-extraction.js"
+    "setup": "bash setup.sh",
+    "build": "cd mcp-server && npm run build",
+    "dev": "cd remotion-project && npm run dev"
   },
-  "dependencies": {
-    "dotenv": "^16.4.1",
-    "@remotion/bundler": "^4.0.267",
-    "@remotion/renderer": "^4.0.267",
-    "remotion": "^4.0.267",
-    "axios": "^1.6.0"
-  },
-  "keywords": ["video", "mcp", "remotion", "ai"],
+  "keywords": ["video", "mcp", "remotion", "ai", "claude"],
   "author": "",
   "license": "MIT"
 }

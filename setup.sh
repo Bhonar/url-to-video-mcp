@@ -2,7 +2,7 @@
 
 set -e
 
-echo "🎬 URL to Video MCP + Skill Setup"
+echo "URL to Video MCP + Skill Setup"
 echo "=================================="
 echo ""
 
@@ -10,77 +10,53 @@ echo ""
 echo "Checking prerequisites..."
 
 if ! command -v node &> /dev/null; then
-    echo "❌ Node.js not found. Please install Node.js 18+ first."
+    echo "Node.js not found. Please install Node.js 18+ first."
     exit 1
 fi
 
-if ! command -v docker &> /dev/null; then
-    echo "❌ Docker not found. Please install Docker first."
-    exit 1
-fi
-
-if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
-    echo "❌ Docker Compose not found. Please install Docker Compose first."
-    exit 1
-fi
-
-echo "✓ Node.js $(node --version)"
-echo "✓ Docker $(docker --version | cut -d ' ' -f 3)"
+NODE_VERSION=$(node --version)
+echo "Node.js $NODE_VERSION"
 echo ""
 
 # Setup MCP server
-echo "📦 Setting up MCP server..."
+echo "Setting up MCP server..."
 cd mcp-server
-cp .env.example .env
-echo "⚠️  Please edit mcp-server/.env with your API keys"
+if [ ! -f .env ]; then
+    cp .env.example .env
+    echo "Created mcp-server/.env — please edit with your API keys"
+fi
 npm install
 npm run build
 cd ..
-echo "✓ MCP server ready"
+echo "MCP server ready"
 echo ""
 
 # Setup Remotion project
-echo "🎥 Setting up Remotion project..."
+echo "Setting up Remotion project..."
 cd remotion-project
 npm install
 cd ..
-echo "✓ Remotion project ready"
+echo "Remotion project ready"
 echo ""
 
-# Start Brand Identity Extractor
-echo "🐳 Starting Brand Identity Extractor..."
-docker-compose up -d
-echo "✓ Brand Identity Extractor running on http://localhost:8000"
-echo ""
-
-# Install skill
-echo "📚 Installing skill..."
-if command -v npx &> /dev/null; then
-    npx skills add ./skill
-    echo "✓ Skill installed"
-else
-    echo "⚠️  Could not install skill automatically."
-    echo "   Run: npx skills add ./skill"
-fi
-echo ""
+# Create output directory
+mkdir -p ~/Videos/url-to-video
 
 echo "=================================="
-echo "✅ Setup complete!"
+echo "Setup complete!"
 echo ""
 echo "Next steps:"
 echo "1. Edit mcp-server/.env with your API keys:"
-echo "   - TABSTACK_API_KEY"
-echo "   - MINIMAX_API_KEY"
-echo "   - MINIMAX_GROUP_ID"
+echo "   - TABSTACK_API_KEY (https://tabstack.ai)"
+echo "   - MINIMAX_API_KEY  (https://platform.minimax.chat)"
 echo ""
-echo "2. Test the MCP server:"
-echo "   cd mcp-server && npm start"
+echo "2. Add MCP server to your Claude Code config:"
+echo "   claude mcp add url-to-video -- node $(pwd)/mcp-server/dist/server.js"
 echo ""
-echo "3. Preview Remotion templates:"
-echo "   cd remotion-project && npm run dev"
+echo "3. Install the skill:"
+echo "   Copy skill/SKILL.md to .claude/skills/ or symlink it"
 echo ""
 echo "4. Use with Claude Code:"
 echo "   claude"
 echo "   Then try: \"Turn https://example.com into a video\""
 echo ""
-echo "🎬 Happy video making!"

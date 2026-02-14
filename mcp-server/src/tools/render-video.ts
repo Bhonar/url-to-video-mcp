@@ -2,8 +2,13 @@ import { bundle } from '@remotion/bundler';
 import { renderMedia, selectComposition } from '@remotion/renderer';
 import { enableTailwind } from '@remotion/tailwind';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import os from 'os';
 import fs from 'fs/promises';
+
+// ESM __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 interface RenderParams {
   inputProps: Record<string, any>;
@@ -54,7 +59,7 @@ export async function renderVideo(params: RenderParams): Promise<RenderResult> {
     inputProps,
   });
 
-  console.error(`✓ Composition: ${composition.id} (${composition.width}x${composition.height}, ${composition.durationInFrames} frames)`);
+  console.error(`✓ Composition: ${composition.id} (${composition.width}x${composition.height}, ${composition.durationInFrames} frames = ${(composition.durationInFrames / composition.fps).toFixed(1)}s)`);
 
   // Step 3: Render video
   console.error('Rendering video...');

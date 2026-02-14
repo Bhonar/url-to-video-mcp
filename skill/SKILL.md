@@ -5,3432 +5,568 @@ description: Create motion graphics videos from URLs using Remotion with AI-gene
 
 # URL to Video - Remotion Skill
 
-## Philosophy: Quality Over Speed
+Create unique promotional videos (30-90s) from landing page URLs. Every video is custom-designed based on the brand's personality, colors, and content. No templates.
 
-This skill creates **unique, high-quality promotional videos** from landing page URLs. Every video is custom-designed based on the brand's personality, colors, and content.
+**What it produces:** MP4 video with custom animations, AI-generated instrumental music, AI narration, beat-synced transitions, and brand-accurate styling.
 
-**Core Principles:**
-- **No Templates** - Every video is designed from scratch
-- **Design Before Code** - Plan scenes, animations, transitions first
-- **Brand-Driven** - Colors, fonts, style reflect the brand
-- **Advanced Features** - Evaluate and use when appropriate
-- **Quality Validation** - 30-item checklist before rendering
-
-**What This Produces:**
-- 30-90 second promotional videos
-- Custom animations and transitions
-- AI-generated music (instrumental)
-- AI-generated narration
-- Beat-synced scene transitions
-- Professional typography and layout
+**Target file:** `remotion-project/src/compositions/Generated.tsx` (overwritten each run)
 
 ---
 
-## The Complete Process
+## 6-Step Workflow
 
-Every video follows these 12 steps:
+### Step 1: Extract & Analyze
 
-### Phase 1: Content & Analysis
-1. **Extract** - Get content, branding, metadata from URL
-2. **Analyze** - Determine brand personality, visual style, animation tempo
-3. **Design Scenes** - Plan scene count, purpose, duration, layout
-4. **Plan Animations** - Choose animation types for each scene
-5. **Plan Transitions** - Select transition styles between scenes
+**Call `extract_url_content` with the URL.**
 
-### Phase 2: Audio Production
-6. **Write Script** - Create narration following story arc
-7. **Generate Audio** - Create music and narration with AI
+Returns:
+- `content` — title, description, features[], domain
+- `branding` — logo (url + staticPath), colors (primary/secondary/accent/background), font, theme
+- `metadata` — domain, industry
 
-### Phase 3: Video Production
-8. **Evaluate Advanced Features** - Decide which advanced features to use
-9. **Plan Code Structure** - Design components, imports, props
-10. **Write Remotion Code** - Implement the design in TypeScript/React
-11. **Validate Quality** - Verify all 30 quality checklist items
-12. **Render Video** - Generate final MP4 file
+**Then analyze the brand:**
 
-**Critical:** Steps 2-5 and 8-11 are MANDATORY design and validation phases. You cannot skip them.
+1. **Brand Personality** — based on colors + industry:
+   - Vibrant colors + tech = Modern/Bold/Energetic
+   - Muted colors + corporate = Professional/Trustworthy
+   - Dark + high contrast = Dramatic/Cinematic
+   - Bright + playful = Fun/Approachable
+   - Minimal/grayscale = Clean/Sophisticated
 
----
+2. **Animation Tempo** — based on personality:
+   - Energetic/Tech = Fast (animations < 1s)
+   - Professional/Corporate = Medium (1-2s)
+   - Dramatic/Minimal = Slow (2-3s)
 
-## When to Use This Skill
+3. **Music Style** — based on personality:
 
-Use this skill when you need to:
-
-- **Create promotional videos** from landing page URLs
-- **Generate social media content** from product pages
-- **Turn website content** into engaging video
-- **Produce explainer videos** automatically
-- **Create product launch videos** from SaaS pages
-
-**Perfect for:**
-- SaaS product launches
-- Marketing campaigns
-- Social media ads
-- Website hero videos
-- Product demos
-
-**Not suitable for:**
-- Long-form content (>2 minutes)
-- Videos requiring live action footage
-- Videos with complex 3D models
-- Videos requiring manual video editing
+   | Personality | Music Style |
+   |------------|-------------|
+   | Modern/Tech | lo-fi, hip-hop |
+   | Professional | jazz, ambient |
+   | Dramatic | cinematic |
+   | Playful | pop |
+   | Minimal | ambient |
 
 ---
 
-## Video Capabilities
+### Step 2: Write Script & Generate Audio
 
-**Technical Specifications:**
-- **Resolution:** 1920x1080 (Full HD)
-- **Frame Rate:** 30 fps
-- **Duration:** 30-90 seconds (recommended)
-- **Format:** MP4 (H.264 codec)
-- **Audio:** Stereo, AAC codec
+**Write a narration script** following this arc:
+- **Hook** (3-5s) — Attention-grabbing question or statement
+- **Problem** (5-10s) — Pain point the product solves
+- **Solution** (10-15s) — Introduce the product using content.title and content.description
+- **Features** (15-25s) — Highlight 3-5 features from content.features[]
+- **CTA** (3-5s) — Call to action with content.domain
 
-**Animation Capabilities:**
-- Spring-based physics animations
-- Smooth scene transitions (fade, slide, wipe, flip, clockWipe)
-- Text animations and effects
-- Logo reveals and scaling
-- Color interpolation and gradients
-- Beat-synchronized motion
+Guidelines: conversational tone, ~150 words/min, match brand voice.
 
-**Advanced Features:**
-- Audio visualization (spectrum bars, waveforms)
-- 3D graphics and models
-- Data charts and graphs
-- Mapbox integration for location-based content
-- Lottie animations
-- Skia-powered visual effects
-- TikTok-style captions
+**Call `generate_audio`** with:
+- `musicStyle` — from analysis above
+- `narrationScript` — your script
+- `duration` — total video length in seconds
+
+**Save these returned values:**
+- `audio.music.staticPath` — for `staticFile()` in Generated.tsx
+- `audio.narration.staticPath` — for `staticFile()` in Generated.tsx
+- `audio.beats` — beat timecodes for transition sync
 
 ---
 
-# Part 2: Complete Workflow
+### Step 3: Design Scenes
 
-## Step 1: Extract Content from URL
+Plan 4-6 scenes before writing code:
 
-**Call the MCP tool:**
+**Required scenes:**
+- **Hook** (3-5s) — Logo reveal, dramatic entrance
+- **Solution** (10-15s) — Product introduction
+- **CTA** (3-5s) — Call to action with domain
+
+**Optional scenes:**
+- **Problem** (5-10s) — Pain point
+- **Features** (15-25s) — Key benefits showcase
+- **Social Proof** (5-10s) — Stats or testimonials
+
+**For each scene, decide:**
+- Duration in seconds and frames (seconds * 30fps)
+- Layout (centered, split-screen, grid, full-bleed)
+- Animation type (spring for organic, interpolate for precise)
+- Transition to next scene (fade, slide, wipe, flip)
+
+**Frame calculation:** `durationInFrames = seconds * fps` (fps = 30)
+
+---
+
+### Step 4: Load Font
+
+Choose a Google Font that matches the brand personality. Load it using `@remotion/google-fonts`:
 
 ```typescript
-const extracted = await extract_url_content({
-  url: "https://example.com"
+import { loadFont } from '@remotion/google-fonts/Inter'; // or Montserrat, Roboto, etc.
+const { fontFamily } = loadFont('normal', {
+  weights: ['400', '700'],
+  subsets: ['latin'],
 });
 ```
 
-**Returns:**
-
-```typescript
-{
-  content: {
-    title: string;
-    description: string;
-    features: string[];
-    heroImage?: string;
-    sections: Array<{ heading: string; content: string }>;
-    domain: string;
-  },
-  branding: {
-    logo: { url: string };
-    colors: {
-      primary: string;
-      secondary: string;
-      accent: string;
-      background: string;
-    };
-    font: string;
-    theme: 'light' | 'dark';
-  },
-  metadata: {
-    domain: string;
-    industry: string;
-  }
-}
-```
-
-**What it does:**
-1. Uses Tabstack API to extract page content
-2. Uses Brand Identity Extractor for logo + color palette
-3. Falls back to Playwright screenshot + Claude Vision if needed
-4. Infers industry from content
-
-**Save These Values (You'll Need Them):**
-- `branding.colors.primary` - Main brand color
-- `branding.colors.secondary` - Supporting color
-- `branding.colors.accent` - Highlight color
-- `branding.colors.background` - Base color
-- `branding.font` - Typography
-- `branding.theme` - "light" or "dark"
-- `branding.logo.url` - Logo image
-- `metadata.industry` - Industry classification
-- `content.features.length` - Number of features (determines scene count)
-
-**Next Step:** Proceed to Step 2 (Brand Analysis)
+Use `fontFamily` in your styles instead of raw `branding.font`. If the brand's font is available as a Google Font, use that. Otherwise pick a suitable match:
+- Modern/Tech: Inter, Space Grotesk, DM Sans
+- Professional: Roboto, Open Sans, Source Sans 3
+- Dramatic: Playfair Display, Oswald
+- Playful: Nunito, Poppins, Quicksand
+- Minimal: Lato, Raleway, Jost
 
 ---
 
-## Step 2: Brand & Content Analysis (MANDATORY)
+### Step 5: Write Generated.tsx
 
-**Before writing any code, analyze the brand to inform all design decisions.**
+Write the full composition at `remotion-project/src/compositions/Generated.tsx`.
 
-### Analysis Framework
+**You MUST follow ALL Remotion Rules below. Violating any FORBIDDEN rule will produce a broken video.**
 
-#### 1. Determine Brand Personality
-
-**Analyze:** title + description + colors + industry
-
-**Decision Tree:**
-```
-IF colors are vibrant AND industry is tech
-  → Personality: Modern, Bold, Innovative, Energetic
-
-IF colors are muted AND industry is corporate/finance
-  → Personality: Professional, Trustworthy, Stable
-
-IF colors are dark with high contrast
-  → Personality: Dramatic, Cinematic, Premium
-
-IF colors are playful AND bright
-  → Personality: Fun, Approachable, Friendly
-
-IF colors are minimal (grayscale/pastels)
-  → Personality: Clean, Minimal, Sophisticated
-```
-
-**Document Your Decision:**
-- [ ] Brand Personality: _______________
-
----
-
-#### 2. Determine Visual Style
-
-**Based on personality, choose visual approach:**
-
-| Personality | Visual Style | Characteristics |
-|------------|--------------|-----------------|
-| Modern/Tech | Bold & Dynamic | Large typography, geometric shapes, motion |
-| Professional | Clean & Structured | Grid layouts, subtle animations, balanced |
-| Dramatic | Cinematic | Dark backgrounds, dramatic lighting, slow motion |
-| Playful | Fun & Energetic | Bouncy animations, bright colors, organic shapes |
-| Minimal | Simple & Elegant | Generous whitespace, subtle motion, typography-focused |
-
-**Document Your Decision:**
-- [ ] Visual Style: _______________
-
----
-
-#### 3. Determine Animation Tempo
-
-**Based on personality + industry:**
-
-```
-IF personality is Energetic OR industry is tech/gaming
-  → Tempo: Fast (animations < 1s, quick transitions)
-
-IF personality is Professional OR industry is corporate/finance
-  → Tempo: Medium (animations 1-2s, smooth transitions)
-
-IF personality is Dramatic OR Minimal
-  → Tempo: Slow (animations 2-3s, lingering shots)
-```
-
-**Document Your Decision:**
-- [ ] Animation Tempo: _______________
-
----
-
-#### 4. Determine Typography Hierarchy
-
-**Based on visual style:**
-
-```
-Bold & Dynamic → Large headlines (height * 0.12), heavy weight (900)
-Clean & Structured → Medium headlines (height * 0.09), regular weight (600)
-Cinematic → Extra large (height * 0.14), bold weight (700)
-Fun & Energetic → Large rounded (height * 0.11), varied weights
-Simple & Elegant → Clean sizes (height * 0.08), light weight (300)
-```
-
-**Document Your Decision:**
-- [ ] Typography: Headlines ___px, Body ___px, Weight ___
-
----
-
-#### 5. Determine Layout Preference
-
-**Based on visual style + content:**
-
-```
-IF visual style is Bold
-  → Layout: Full-bleed (edge-to-edge content)
-
-IF visual style is Clean
-  → Layout: Centered with padding (80% width)
-
-IF visual style is Cinematic
-  → Layout: Letterbox (16:9 aspect with bars)
-
-IF content has comparisons
-  → Layout: Split-screen (50/50)
-
-IF content is feature-heavy
-  → Layout: Grid (2x2 or 3x3)
-```
-
-**Document Your Decision:**
-- [ ] Layout Preference: _______________
-
----
-
-### Validation Checkpoint
-
-**You MUST complete this checklist before proceeding:**
-
-- [ ] Brand Personality determined
-- [ ] Visual Style chosen
-- [ ] Animation Tempo decided
-- [ ] Typography Hierarchy planned
-- [ ] Layout Preference selected
-- [ ] All decisions documented
-
-**Cannot proceed to Step 3 without completing this analysis.**
-
----
-
-## Step 3: Scene Structure Design (MANDATORY)
-
-**Design your complete scene structure before writing any code.**
-
-### Scene Count Guidelines
-
-**Based on number of features:**
-```
-1-3 features → 3-4 scenes
-4-5 features → 4-5 scenes
-6+ features → 5-6 scenes
-```
-
-### Required Scene Types
-
-**Every video MUST include:**
-- **Hook Scene** (always first) - 3-5 seconds
-- **Solution Scene** (always) - 10-15 seconds
-- **CTA Scene** (always last) - 3-5 seconds
-
-**Include if applicable:**
-- **Problem Scene** (if pain point exists) - 5-10 seconds
-- **Features Scene** (if 3+ features) - 15-25 seconds
-- **Social Proof Scene** (if stats/testimonials) - 5-10 seconds
-
-### Scene Planning Template
-
-**For EACH scene, document:**
-
-```
-Scene [X]: [Scene Purpose]
-  Duration: [X] seconds ([X * fps] frames)
-
-  Visual Concept:
-    - Primary element: [Logo/Text/Image/Chart/etc.]
-    - Secondary elements: [Supporting visuals]
-    - Background: [Gradient/Solid/Image/Video]
-
-  Layout:
-    - Type: [Centered/Split-screen/Grid/Full-bleed/Letterbox]
-    - Content position: [Center/Left/Right/Top/Bottom]
-    - Padding: [X% of width/height]
-
-  Colors Used:
-    - Primary role: [Background/Text/Accent/etc.]
-    - Secondary role: [Background/Text/Accent/etc.]
-    - Accent role: [Highlights/CTA/etc.]
-
-  Typography:
-    - Main text: [content.title/description/features[X]]
-    - Size: [height * X.XX]
-    - Weight: [300/400/600/700/900]
-
-  Animation Preview:
-    - Entrance: [Fade in/Slide in/Scale up/etc.]
-    - Emphasis: [Pulse/Glow/Rotate/etc.]
-    - Exit: [Fade out/Slide out/etc.]
-```
-
-### Example Scene Plan (DO NOT COPY - Template Only)
-
-```
-Scene 1: Hook - Logo Reveal
-  Duration: 3 seconds (90 frames at 30fps)
-
-  Visual Concept:
-    - Primary: Logo centered with glow effect
-    - Secondary: Title text below logo
-    - Background: Gradient (primary → secondary)
-
-  Layout:
-    - Centered, full-screen
-    - Logo at 35% of screen height
-    - Title at 15% from bottom
-
-  Colors Used:
-    - Primary: Gradient start
-    - Secondary: Gradient end
-    - Accent: Logo glow color
-    - Background: White text color
-
-  Typography:
-    - Main: content.title
-    - Size: height * 0.12
-    - Weight: 700 (bold)
-
-  Animation Preview:
-    - Entrance: Scale from 0.5 to 1.0 with spring
-    - Emphasis: Pulsing glow (opacity 0 → 1 → 0.7)
-    - Exit: None (transitions to next scene)
-
-[Continue for ALL scenes...]
-```
-
-### Validation Checkpoint
-
-**You MUST complete this checklist before proceeding:**
-
-- [ ] Total scene count determined ([X] scenes)
-- [ ] Each scene has defined purpose
-- [ ] Each scene has planned duration (totals to video duration)
-- [ ] Each scene has visual concept
-- [ ] Each scene has layout plan
-- [ ] Each scene has color usage plan
-- [ ] Each scene has typography plan
-- [ ] Each scene has animation preview
-- [ ] All scene plans documented
-
-**Cannot proceed to Step 4 without completing scene design.**
-
----
-
-## Step 4: Animation Strategy (MANDATORY)
-
-**Plan specific animations for EACH scene before coding.**
-
-### Animation Planning Framework
-
-**For EACH scene from Step 3, answer these questions:**
-
-#### Question 1: What's the entrance animation?
-
-**Options:**
-```
-Spring fade in (organic)
-  → spring({ frame, fps, from: 0, to: 1, config: { damping: 200 } })
-  → Use when: Professional, smooth entrance
-
-Bounce in (playful)
-  → spring({ frame, fps, from: 0, to: 1, config: { damping: 8 } })
-  → Use when: Fun, energetic brand
-
-Slide in (directional)
-  → spring({ frame, fps, from: -width, to: 0, config: { damping: 200 } })
-  → Use when: Sequential content, narrative flow
-
-Zoom in (dramatic)
-  → spring({ frame, fps, from: 1.5, to: 1, config: { damping: 200 } })
-  → Use when: Cinematic, impactful reveal
-
-Eased fade in (precise)
-  → interpolate(frame, [0, 1*fps], [0, 1], { easing: Easing.inOut(Easing.cubic) })
-  → Use when: Exact timing needed, controlled pace
-```
-
-**Document for each scene:**
-- [ ] Scene 1 entrance: _______________
-- [ ] Scene 2 entrance: _______________
-- [ ] Scene 3 entrance: _______________
-- [ ] [etc.]
-
----
-
-#### Question 2: What's the emphasis animation?
-
-**Options:**
-```
-Pulsing glow (attention-grabbing)
-  → Math.sin(frame / 10) * 0.3 + 0.7 for opacity
-  → Use when: Highlighting CTA, important elements
-
-Color shift (dynamic)
-  → interpolateColors(frame, [0, 2*fps], [color1, color2])
-  → Use when: Brand has multiple colors, modern style
-
-Rotating element (kinetic)
-  → frame * 2 for rotation degrees
-  → Use when: Tech brand, showing motion/progress
-
-Scale on beat (music-reactive)
-  → Check audio.beats array, scale to 1.1 when near beat
-  → Use when: Music-driven video, energetic brand
-
-Morphing shape (creative)
-  → interpolate between different paths/sizes
-  → Use when: Abstract brand, creative industry
-```
-
-**Document for each scene:**
-- [ ] Scene 1 emphasis: _______________
-- [ ] Scene 2 emphasis: _______________
-- [ ] Scene 3 emphasis: _______________
-- [ ] [etc.]
-
----
-
-#### Question 3: Spring or Easing?
-
-**Decision Tree:**
-```
-IF you want organic, physics-based motion
-  → Use spring
-  → Examples: Logo bounce, natural movement, UI elements
-
-IF you need precise timing and control
-  → Use interpolate with easing
-  → Examples: Syncing to narration, exact durations, coordinated sequences
-
-IF you want dramatic, stylized motion
-  → Use easing with specific curves
-  → Easing.out(Easing.bounce) - Bouncy landing
-  → Easing.out(Easing.back(1.5)) - Overshoot effect
-  → Easing.inOut(Easing.cubic) - Smooth acceleration/deceleration
-```
-
-**Document for each scene:**
-- [ ] Scene 1 motion: Spring / Easing: _______________
-- [ ] Scene 2 motion: Spring / Easing: _______________
-- [ ] Scene 3 motion: Spring / Easing: _______________
-- [ ] [etc.]
-
----
-
-#### Question 4: What's the timing?
-
-**Based on Animation Tempo from Step 2:**
-
-```
-Fast Tempo:
-  - Entrance animations: 0.5-1 second
-  - Emphasis animations: 0.3-0.5 second loops
-  - Exit animations: 0.3-0.5 seconds
-
-Medium Tempo:
-  - Entrance animations: 1-2 seconds
-  - Emphasis animations: 0.5-1 second loops
-  - Exit animations: 0.5-1 seconds
-
-Slow Tempo:
-  - Entrance animations: 2-3 seconds
-  - Emphasis animations: 1-2 second loops
-  - Exit animations: 1-2 seconds
-```
-
-**Document for each scene:**
-- [ ] Scene 1 timing: Entrance ___s, Emphasis ___s
-- [ ] Scene 2 timing: Entrance ___s, Emphasis ___s
-- [ ] Scene 3 timing: Entrance ___s, Emphasis ___s
-- [ ] [etc.]
-
----
-
-### Validation Checkpoint
-
-**You MUST complete this checklist before proceeding:**
-
-- [ ] Entrance animation planned for EVERY scene
-- [ ] Emphasis animation planned for EVERY scene
-- [ ] Motion type chosen (spring/easing) for EVERY scene
-- [ ] Timing planned for EVERY scene
-- [ ] Animations match brand personality
-- [ ] Animations match animation tempo from Step 2
-- [ ] All animation decisions documented
-
-**Cannot proceed to Step 5 without completing animation planning.**
-
----
-
-## Step 5: Transition Strategy (MANDATORY)
-
-**Plan transitions BETWEEN every scene.**
-
-### Transition Selection
-
-**Match transition to Brand Personality (from Step 2):**
-
-| Brand Personality | Recommended Transition | Why |
-|------------------|------------------------|-----|
-| Modern/Tech | `slide({ direction })` | Directional, purposeful |
-| Professional | `fade()` | Subtle, smooth |
-| Dramatic | `wipe()` or `clockWipe()` | Bold, cinematic |
-| Playful | `flip()` | Fun, unexpected |
-| Minimal | `fade()` | Unobtrusive, clean |
-
-### Transition Timing
-
-**Standard:** 0.5 seconds (15 frames at 30fps)
-
-**Adjust based on tempo:**
-```
-Fast Tempo → 0.3s (9 frames)
-Medium Tempo → 0.5s (15 frames)
-Slow Tempo → 0.8s (24 frames)
-```
-
-### Beat Synchronization
-
-**If `audio.beats` is available:**
-
-```typescript
-// For major scene transitions, sync to nearest beat
-Scene 1 ends at frame X
-Nearest beat: audio.beats.find(b => Math.abs(b - (X / fps)) < 0.1)
-Adjust scene duration to hit beat exactly
-```
-
-**When to sync:**
-- Hook → Problem transition
-- Problem → Solution transition
-- Features → CTA transition
-- Within-scene transitions (optional)
-
-### Transition Planning Template
-
-```
-Transition 1: Scene 1 (Hook) → Scene 2 (Problem)
-  Type: [fade/slide/wipe/flip/clockWipe]
-  Duration: [X] seconds ([X * fps] frames)
-  Timing: [linearTiming / springTiming]
-  Beat-synced: [Yes/No]
-
-  If slide:
-    - Direction: [from-left/from-right/from-top/from-bottom]
-
-  If wipe:
-    - Direction: [left-to-right/right-to-left/top-to-bottom/bottom-to-top]
-
-[Continue for all transitions...]
-```
-
-### Example Transition Plan (DO NOT COPY)
-
-```
-Transition 1: Hook → Problem
-  Type: fade()
-  Duration: 0.5 seconds (15 frames)
-  Timing: linearTiming
-  Beat-synced: Yes (sync to beat at 3.2s)
-
-Transition 2: Problem → Solution
-  Type: slide({ direction: 'from-bottom' })
-  Duration: 0.5 seconds (15 frames)
-  Timing: springTiming({ config: { damping: 200 } })
-  Beat-synced: Yes (sync to beat at 8.5s)
-
-Transition 3: Solution → Features
-  Type: fade()
-  Duration: 0.5 seconds (15 frames)
-  Timing: linearTiming
-  Beat-synced: No
-
-[etc.]
-```
-
-### Validation Checkpoint
-
-**You MUST complete this checklist before proceeding:**
-
-- [ ] Transition planned for EVERY scene change
-- [ ] Transition type matches brand personality
-- [ ] Transition duration matches animation tempo
-- [ ] Beat synchronization evaluated
-- [ ] Major transitions synced to beats (if audio.beats available)
-- [ ] All transition decisions documented
-
-**Cannot proceed to Step 6 without completing transition planning.**
-
----
-
-## Step 6: Write Narration Script
-
-Follow this **story arc** structure:
-
-**1. Hook (3-5 seconds)** - Grab attention
-```
-"Tired of slow deployments?"
-```
-
-**2. Problem (5-10 seconds)** - Describe pain point
-```
-"Most teams wait hours for CI/CD pipelines to complete."
-```
-
-**3. Solution (10-15 seconds)** - Introduce product
-```
-"FastDeploy cuts deployment time from hours to minutes with AI-powered optimization."
-```
-
-**4. Features (15-25 seconds)** - Highlight 3-5 key benefits
-```
-"One-click rollbacks keep you safe. Real-time monitoring shows exactly what's happening. Auto-scaling handles traffic spikes automatically."
-```
-
-**5. Call to Action (3-5 seconds)** - Drive action
-```
-"Start deploying faster today. Visit FastDeploy.com"
-```
-
-**Script Writing Guidelines:**
-- **Tone**: Conversational, not robotic
-- **Pacing**: ~150 words/minute
-- **Length**: Match to video duration
-- **Voice**: Match brand personality from Step 2
-- **Avoid**: Jargon, filler words, repetition
-
-### Script Planning Template
-
-**Use this structure (do NOT copy verbatim):**
-
-```
-[Hook - 3-5 seconds]
-[Attention-grabbing question or statement related to content]
-
-[Problem - 5-10 seconds] (if applicable)
-[Describe the pain point that content.features solve]
-[Elaborate with specific details from content.description]
-
-[Solution - 10-15 seconds]
-[Introduce content.title as the solution]
-[Explain how it works using content.description]
-
-[Features - 15-25 seconds]
-[For each of content.features[0-2]:]
-  [State feature and its benefit]
-
-[Social Proof - 5-10 seconds] (if applicable)
-[If stats or testimonials available in content.sections]
-
-[CTA - 3-5 seconds]
-[Drive action using content.title]
-[End with metadata.domain]
-```
-
-### Script Validation
-
-**Before proceeding, verify:**
-
-- [ ] Script follows story arc structure
-- [ ] Tone matches brand personality (from Step 2)
-- [ ] Pacing is ~150 words/minute
-- [ ] Length matches video duration
-- [ ] Uses content.features (not invented features)
-- [ ] Uses content.description (not generic copy)
-- [ ] Ends with metadata.domain
-- [ ] Matches brand voice (formal/casual based on personality)
-
-**Next Step:** Proceed to Step 7 (Generate Audio)
-
----
-
-## Step 7: Generate Audio
-
-### Music Style Selection (Based on Step 2)
-
-**Use brand personality to choose music style:**
-
-| Brand Personality | Music Style | Why |
-|------------------|-------------|-----|
-| Modern/Tech | "lo-fi" or "hip-hop" | Contemporary, urban vibe |
-| Professional | "jazz" or "ambient" | Sophisticated, non-distracting |
-| Dramatic | "cinematic" | Orchestral, epic feel |
-| Playful | "pop" | Upbeat, catchy |
-| Minimal | "ambient" | Subtle, atmospheric |
-
-**Available styles:** pop, hip-hop, rap, jazz, lo-fi, ambient, cinematic, rock
-
-**Selected style:** _______________ (based on personality: _______________)
-
-**CRITICAL**: All music is **instrumental only** (NO singing, NO vocals!)
-
-### Call the MCP Tool
-
-```typescript
-const audio = await generate_audio({
-  musicStyle: "lo-fi",  // Your selected style from above
-  narrationScript: script,
-  duration: 30
-});
-```
-
-**Returns:**
-
-```typescript
-{
-  music: {
-    url: string;
-    localPath: string;
-    duration: number;
-  },
-  narration: {
-    url: string;
-    localPath: string;
-    timecodes: Array<{ word: string; start: number; end: number }>;
-  },
-  beats: number[] // Beat timecodes in seconds
-}
-```
-
-**IMPORTANT - Save This:**
-- Store `audio.beats` array - You'll use this in Step 5 for beat-synced transitions
-- Store `audio.music.localPath` - Required for Audio component
-- Store `audio.narration.localPath` - Required for Audio component
-
-### Validation
-
-- [ ] Music style matches brand personality
-- [ ] Duration matches video duration
-- [ ] audio.beats array received and saved
-- [ ] audio.music.localPath exists
-- [ ] audio.narration.localPath exists
-
-**Next Step:** Proceed to Step 8 (Advanced Features Decision)
-
----
-
-## Step 8: Advanced Features Decision (MANDATORY)
-
-**Evaluate EVERY advanced feature. Decide whether to include it.**
-
-**Rule:** Features must serve the brand/content. Don't add features just because they're cool.
-
----
-
-### 1. Audio Visualization
-
-**Evaluate:**
-- [ ] Is brand music/audio-related? → YES = Strong candidate
-- [ ] Is brand energetic/tech? → YES = Moderate candidate
-- [ ] Does video need dynamic elements? → YES = Weak candidate
-- [ ] None of above → SKIP
-
-**If YES to any:**
-
-**Options:**
-- **Spectrum bars** - Frequency bars that react to music
-  - Use when: Modern, tech, music-focused brands
-  - Implementation: `useWindowedAudioData` + `visualizeAudio`
-
-- **Bass-reactive scaling** - Elements scale with bass
-  - Use when: Energetic brands, logo emphasis
-  - Implementation: Extract low frequencies, map to scale
-
-**Decision:**
-- [ ] Include audio visualization: YES / NO
-- [ ] If YES, which type: _______________
-- [ ] Which scene: _______________
-
----
-
-### 2. Text Effects
-
-**Evaluate:**
-- [ ] Is there a tagline or key phrase? → YES = Strong candidate
-- [ ] Does text need dramatic reveal? → YES = Moderate candidate
-- [ ] Is brand playful/creative? → YES = Weak candidate
-- [ ] None of above → SKIP
-
-**If YES to any:**
-
-**Options:**
-- **Typewriter effect** - Characters appear one-by-one
-  - Use when: Building suspense, tech brands, storytelling
-  - Implementation: String slicing with interpolate
-
-- **Word-by-word reveal** - Words fade in sequentially
-  - Use when: Emphasis on each word, poetry, manifesto
-  - Implementation: Split by words, stagger opacity
-
-**Decision:**
-- [ ] Include text effects: YES / NO
-- [ ] If YES, which type: _______________
-- [ ] Which text: _______________
-- [ ] Which scene: _______________
-
----
-
-### 3. Charts & Data Visualization
-
-**Evaluate:**
-- [ ] Does content include numbers/stats? → YES = Strong candidate
-- [ ] Does content show growth/trends? → YES = Strong candidate
-- [ ] Is brand data/analytics-focused? → YES = Moderate candidate
-- [ ] None of above → SKIP
-
-**If YES to any:**
-
-**Options:**
-- **Animated bar chart** - Bars grow from 0 to value
-  - Use when: Comparing metrics, showing progress
-  - Implementation: Spring animation per bar with stagger
-
-- **Animated line chart** - Path draws over time
-  - Use when: Showing trends, time-series data
-  - Implementation: `evolvePath` from @remotion/paths
-
-**Decision:**
-- [ ] Include charts: YES / NO
-- [ ] If YES, which type: _______________
-- [ ] Data source: _______________
-- [ ] Which scene: _______________
-
----
-
-### 4. 3D Graphics
-
-**Evaluate:**
-- [ ] Is product physical/3D (hardware)? → YES = Strong candidate
-- [ ] Does brand want premium/high-tech feel? → YES = Moderate candidate
-- [ ] Is brand in gaming/design industry? → YES = Moderate candidate
-- [ ] None of above → SKIP
-
-**If YES to any:**
-
-**Options:**
-- **3D model display** - Show product in 3D
-  - Use when: Physical products, industrial design
-  - Implementation: @remotion/three + useGLTF
-
-- **3D text/logo** - Rotating 3D typography
-  - Use when: Premium brands, tech aesthetic
-  - Implementation: @remotion/three + custom meshes
-
-**Decision:**
-- [ ] Include 3D graphics: YES / NO
-- [ ] If YES, which type: _______________
-- [ ] Asset needed: _______________
-- [ ] Which scene: _______________
-
----
-
-### 5. Visual Effects
-
-**Evaluate:**
-
-**Light Leaks:**
-- [ ] Is brand cinematic/dramatic? → YES = Use light leaks
-- [ ] Is brand minimal/clean? → NO = Skip
-
-**Noise/Texture:**
-- [ ] Does brand want organic/gritty feel? → YES = Use noise
-- [ ] Is brand corporate/clean? → NO = Skip
-
-**GIFs/Animated Images:**
-- [ ] Does content include animated elements? → YES = Use AnimatedImage
-- [ ] Is brand playful with animations? → YES = Consider
-
-**Decision:**
-- [ ] Include light leaks: YES / NO
-- [ ] Include noise effects: YES / NO
-- [ ] Include animated images: YES / NO
-- [ ] If animated images, source: _______________
-
----
-
-### 6. Maps (Mapbox)
-
-**Evaluate:**
-- [ ] Is product location-based? → YES = Strong candidate
-- [ ] Does content mention geography/locations? → YES = Strong candidate
-- [ ] Is brand travel/real-estate/logistics? → YES = Moderate candidate
-- [ ] None of above → SKIP
-
-**If YES to any:**
-
-**Implementation:** Mapbox integration with @remotion/three
-
-**Decision:**
-- [ ] Include maps: YES / NO
-- [ ] If YES, location: _______________
-- [ ] Which scene: _______________
-
----
-
-### 7. Captions/Subtitles
-
-**Evaluate:**
-- [ ] Is video for social media (sound-off viewing)? → YES = Strong candidate
-- [ ] Is content complex/technical? → YES = Moderate candidate
-- [ ] Is accessibility important? → YES = Moderate candidate
-- [ ] None of above → SKIP
-
-**If YES to any:**
-
-**Options:**
-- **TikTok-style captions** - Animated word highlights
-- **Standard subtitles** - Bottom-aligned text
-
-**Decision:**
-- [ ] Include captions: YES / NO
-- [ ] If YES, which style: _______________
-
----
-
-### Validation Checkpoint
-
-**You MUST complete this checklist before proceeding:**
-
-- [ ] Audio visualization evaluated (YES/NO decision made)
-- [ ] Text effects evaluated (YES/NO decision made)
-- [ ] Charts evaluated (YES/NO decision made)
-- [ ] 3D graphics evaluated (YES/NO decision made)
-- [ ] Visual effects evaluated (YES/NO decision made)
-- [ ] Maps evaluated (YES/NO decision made)
-- [ ] Captions evaluated (YES/NO decision made)
-- [ ] All decisions documented
-- [ ] Features align with brand personality
-
-**Cannot proceed to Step 9 without completing advanced features evaluation.**
-
----
-
-## Step 9: Code Structure Planning (MANDATORY)
-
-**CRITICAL:** You MUST complete this planning phase before writing any code.
-
-This step forces you to think about code organization, not just copy a template.
-
-### 9.1: Plan Imports
-
-Based on your decisions from Steps 3-8, determine which Remotion APIs and packages you'll need.
-
-**Core Remotion (always needed):**
-```typescript
-import {
-  AbsoluteFill,
-  useCurrentFrame,
-  useVideoConfig,
-} from 'remotion';
-```
-
-**Animation APIs (based on Step 4 decisions):**
-- Spring animations → `import { spring } from 'remotion';`
-- Value interpolation → `import { interpolate } from 'remotion';`
-- Color interpolation → `import { interpolateColors } from 'remotion';`
-- Easing functions → `import { Easing } from 'remotion';`
-
-**Sequencing (based on Step 3 decisions):**
-- Sequential scenes → `import { Sequence } from 'remotion';`
-- Parallel timing → `import { Series } from 'remotion';`
-- Looping elements → `import { Loop } from 'remotion';`
-- Freeze frames → `import { Freeze } from 'remotion';`
-
-**Transitions (based on Step 5 decisions):**
-```typescript
-import { TransitionSeries, linearTiming } from '@remotion/transitions';
-import { fade } from '@remotion/transitions/fade';
-import { slide } from '@remotion/transitions/slide';
-// Add others based on Step 5 plan
-```
-
-**Media (always needed for audio):**
-```typescript
-import { Audio } from '@remotion/media';
-```
-
-**Images (if using logo or screenshots):**
-```typescript
-import { Img } from 'remotion';
-```
-
-**Text utilities (if text-heavy design):**
-```typescript
-import { fitText } from '@remotion/layout-utils';
-```
-
-**Advanced Features (based on Step 8 decisions):**
-- Audio visualization → `import { useWindowedAudioData, visualizeAudio } from '@remotion/media';`
-- Text effects → Custom implementation
-- Charts → Custom SVG or library
-- 3D graphics → `import { ThreeCanvas } from '@remotion/three';`
-- Skia effects → `import { SkiaCanvas } from '@remotion/skia';`
-- Lottie animations → `import { Lottie } from '@remotion/lottie';`
-- Noise textures → `import { noise2D } from '@remotion/noise';`
-- Shapes → `import { Circle, Rect, Triangle } from '@remotion/shapes';`
-- Paths → `import { evolvePath } from '@remotion/paths';`
-
-**Performance (for heavy videos):**
-```typescript
-import { OffthreadVideo } from '@remotion/offthread-video';
-import { prefetch } from 'remotion';
-```
-
-**Checklist:**
-- [ ] Listed all animation imports based on Step 4 plan
-- [ ] Listed transition imports based on Step 5 plan
-- [ ] Listed advanced feature imports based on Step 8 decisions
-- [ ] No unused imports planned
-- [ ] All imports match actual Remotion API (verified against API reference)
-
----
-
-### 9.2: Plan Component Structure
-
-Determine how to break down the video into components.
-
-**Main Component:**
-```typescript
-export const Generated: React.FC<VideoProps> = ({
-  content,
-  branding,
-  audio,
-  metadata,
-  duration,
-}) => {
-  // Main composition wrapper
-  // Contains TransitionSeries or Sequence
-  // Includes Audio components
-  // Renders scene components
-};
-```
-
-**Scene Components:**
-
-Based on Step 3 (Scene Design), plan one component per scene:
-
-```
-Example plan (yours will be different):
-- HookScene (0-3s) - Logo reveal
-- ProblemScene (3-8s) - Pain point presentation
-- SolutionScene (8-15s) - Product introduction
-- FeaturesScene (15-25s) - Benefits showcase
-- CTAScene (25-30s) - Call to action
-```
-
-**Each scene component signature:**
-```typescript
-const SceneName: React.FC<{
-  // Props from VideoProps (destructured)
-  title?: string;
-  description?: string;
-  logo?: string;
-  colors: VideoProps['branding']['colors'];
-  // Scene-specific props
-  width: number;
-  height: number;
-}> = ({ props }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  // Scene-specific animations using frame and fps
-
-  return <AbsoluteFill>...</AbsoluteFill>;
-};
-```
-
-**Subcomponents (if needed):**
-
-For complex scenes, plan subcomponents:
-```
-Example:
-- FeaturesScene
-  └── FeatureItem (reusable for each feature)
-- CTAScene
-  └── PulsingButton (isolated animation)
-```
-
-**Checklist:**
-- [ ] One component planned per scene from Step 3
-- [ ] Component names are descriptive (not Scene1, Scene2)
-- [ ] Props needed for each component listed
-- [ ] Subcomponents identified if scenes are complex
-- [ ] All components use React.FC with typed props
-
----
-
-### 9.3: Plan Props and Data Flow
-
-Determine how data flows from `VideoProps` to scene components.
-
-**VideoProps Interface (from Root.tsx):**
-```typescript
-export interface VideoProps {
-  content: {
-    title: string;
-    description: string;
-    features: string[];
-    heroImage?: string;
-    domain: string;
-  };
-  branding: {
-    logo: { url: string };
-    colors: {
-      primary: string;
-      secondary: string;
-      accent: string;
-      background: string;
-    };
-    font: string;
-    theme: 'light' | 'dark';
-  };
-  audio: {
-    music: { localPath: string };
-    narration: { localPath: string; timecodes: any[] };
-    beats: number[];
-  };
-  metadata: {
-    domain: string;
-    industry: string;
-  };
-  duration: number;
-}
-```
-
-**Plan what each scene needs:**
-
-Example plan:
-```
-HookScene:
-- branding.logo.url (for logo display)
-- branding.colors (for gradient background)
-- content.title (for title reveal)
-- width, height (responsive sizing)
-
-ProblemScene:
-- content.description (for problem statement)
-- branding.colors (for styling)
-- width, height
-
-SolutionScene:
-- content.title (product name)
-- content.description (value proposition)
-- branding.colors
-- width, height
-
-FeaturesScene:
-- content.features (array to map over)
-- branding.colors
-- width, height
-
-CTAScene:
-- content.title or custom CTA text
-- content.domain (website URL)
-- branding.colors
-- width, height
-```
-
-**Audio Props:**
-```
-Main component (Generated):
-- audio.music.localPath → <Audio src={...} />
-- audio.narration.localPath → <Audio src={...} />
-- audio.beats → For beat-synced animations (pass to scenes if needed)
-```
-
-**Checklist:**
-- [ ] Identified which VideoProps each scene needs
-- [ ] Avoided passing entire VideoProps to scenes (destructure)
-- [ ] Planned how to pass width/height from useVideoConfig
-- [ ] Planned audio integration in main component
-- [ ] Considered beat-sync (if Step 5 included beat-reactive transitions)
-
----
-
-### 9.4: Plan Timing and Frame Calculations
-
-Calculate exact frame ranges for each scene.
-
-**Formula:**
-```
-durationInFrames = seconds * fps
-```
-
-**Default FPS:** 30 (verify with `const { fps } = useVideoConfig()`)
-
-**Example calculation (30s video at 30fps = 900 frames):**
-
-Based on Step 3 scene durations:
-```
-Scene 1 (Hook): 3s = 90 frames → from: 0, duration: 90
-Scene 2 (Problem): 5s = 150 frames → from: 90, duration: 150
-Scene 3 (Solution): 7s = 210 frames → from: 240, duration: 210
-Scene 4 (Features): 10s = 300 frames → from: 450, duration: 300
-Scene 5 (CTA): 5s = 150 frames → from: 750, duration: 150
-
-Total: 900 frames (30s)
-```
-
-**With transitions (Step 5):**
-
-If using TransitionSeries with 0.5s transitions (15 frames):
-```
-Scene 1: 90 frames
-Transition: 15 frames
-Scene 2: 150 frames
-Transition: 15 frames
-Scene 3: 210 frames
-Transition: 15 frames
-Scene 4: 300 frames
-Transition: 15 frames
-Scene 5: 150 frames
-
-Total scenes: 900 frames
-Total transitions: 60 frames (4 transitions × 15 frames)
-Adjust scene durations to fit: 900 - 60 = 840 frames for scenes
-```
-
-**Checklist:**
-- [ ] Calculated exact frame ranges for each scene
-- [ ] Accounted for transition durations (if using TransitionSeries)
-- [ ] Total frames match video duration (duration * fps)
-- [ ] `from` values are cumulative (scene 2 starts where scene 1 ends)
-- [ ] No frame gaps or overlaps
-
----
-
-### 9.5: Plan Responsive Sizing
-
-Determine how to make animations responsive to video dimensions.
-
-**Video dimensions (from useVideoConfig):**
-```typescript
-const { width, height } = useVideoConfig();
-// Default: 1920x1080 (Full HD)
-```
-
-**Responsive sizing strategy:**
-
-**Font sizes (relative to height):**
-```
-Hero title: height * 0.12 (129px at 1080p)
-Section heading: height * 0.09 (97px at 1080p)
-Body text: height * 0.06 (65px at 1080p)
-Caption: height * 0.04 (43px at 1080p)
-```
-
-**Spacing (relative to dimensions):**
-```
-Top/bottom padding: height * 0.1 (108px at 1080p)
-Left/right padding: width * 0.05 (96px at 1920px)
-Element gap: height * 0.06 (65px at 1080p)
-```
-
-**Logo size (relative to smaller dimension):**
-```
-logoSize = Math.min(width, height) * 0.35 (378px at 1080p)
-```
-
-**Dynamic text sizing (using fitText):**
-```typescript
-import { fitText } from '@remotion/layout-utils';
-
-const maxWidth = width * 0.8; // 80% of video width
-
-const { fontSize } = fitText({
-  text: content.title,
-  withinWidth: maxWidth,
-  fontFamily: branding.font,
-  fontWeight: 'bold',
-});
-
-// Use fontSize in style
-```
-
-**Checklist:**
-- [ ] All font sizes use height-relative values
-- [ ] All spacing uses dimension-relative values
-- [ ] Logo and images use responsive sizing
-- [ ] Long text uses fitText for dynamic sizing
-- [ ] Tested that layout works at 1920x1080 (default)
-
----
-
-### 9.6: Plan Animation Frame Logic
-
-For each animation from Step 4, plan the frame-based logic.
-
-**Animation Planning Template:**
-
-For each animation:
-1. **What animates?** (opacity, position, scale, rotation, color)
-2. **Start/end values?** (from X to Y)
-3. **Frame range?** (when does it happen)
-4. **Timing function?** (spring, interpolate, easing)
-
-**Example: Hook Scene Logo Reveal**
-
-```
-Animation: Logo fade in and scale up
-- What: opacity (0→1), scale (0.5→1)
-- Frame range: frame 0-60 (first 2 seconds)
-- Timing: spring (physics-based, natural motion)
-
-Code plan:
-const opacity = spring({ frame, fps, from: 0, to: 1 });
-const scale = spring({ frame, fps, from: 0.5, to: 1, config: { damping: 200 } });
-
-style={{
-  opacity,
-  transform: `scale(${scale})`
-}}
-```
-
-**Example: Features Scene Staggered Reveal**
-
-```
-Animation: Each feature slides in with delay
-- What: opacity (0→1), translateX (-300→0)
-- Frame range: Staggered by 40 frames (i * 40)
-- Timing: spring
-
-Code plan:
-{features.map((feature, i) => {
-  const delay = i * 40; // 1.33s stagger at 30fps
-
-  const opacity = spring({
-    frame: frame - delay,
-    fps,
-    from: 0,
-    to: 1
-  });
-
-  const slideIn = spring({
-    frame: frame - delay,
-    fps,
-    from: -300,
-    to: 0
-  });
-
-  return (
-    <div style={{
-      opacity,
-      transform: `translateX(${slideIn}px)`
-    }}>
-      {feature}
-    </div>
-  );
-})}
-```
-
-**Example: CTA Scene Pulsing Button**
-
-```
-Animation: Button scales up/down continuously
-- What: scale (1.0→1.1→1.0)
-- Frame range: Entire scene duration
-- Timing: Math.sin (smooth oscillation)
-
-Code plan:
-const pulse = 1 + Math.sin(frame / (fps * 0.5)) * 0.08;
-
-style={{
-  transform: `scale(${pulse})`
-}}
-```
-
-**Checklist:**
-- [ ] Planned frame logic for each animation from Step 4
-- [ ] Chose appropriate timing function (spring vs interpolate vs Math)
-- [ ] Calculated stagger delays (for sequential reveals)
-- [ ] Considered scene-relative frames (frame - sceneStartFrame)
-- [ ] All animations use `useCurrentFrame()` and `useVideoConfig()` (no hardcoded time)
-
----
-
-### Validation Checkpoint
-
-**You MUST complete this checklist before proceeding to Step 10:**
-
-- [ ] All necessary imports planned (Step 9.1)
-- [ ] Component structure designed (Step 9.2)
-- [ ] Props and data flow mapped (Step 9.3)
-- [ ] Frame timing calculated for all scenes (Step 9.4)
-- [ ] Responsive sizing strategy defined (Step 9.5)
-- [ ] Animation frame logic planned (Step 9.6)
-- [ ] No template code referenced
-- [ ] All decisions based on Steps 2-8 (brand-driven, not generic)
-
-**Cannot proceed to Step 10 (Write Code) without completing code structure planning.**
-
----
-
-## Step 10: Write Remotion Code
-
-**File:** `/Users/bella/Cooking/remotion/url-to-video-mcp/remotion-project/src/compositions/Generated.tsx`
-
-**CRITICAL:** You are now writing the actual Remotion code based on ALL your planning from Steps 2-9.
-
-- This is NOT a template to copy
-- Every line must be intentional based on your design decisions
-- If you find yourself writing generic code, STOP and revisit your planning
-
----
-
-### 10.1: File Structure
-
-**Required structure:**
+**Required file structure:**
 
 ```typescript
 import React from 'react';
-// Your planned imports from Step 9.1
-
+import {
+  AbsoluteFill, useCurrentFrame, useVideoConfig,
+  staticFile, Img, Sequence, interpolate, spring, Easing,
+} from 'remotion';
+import { Audio } from '@remotion/media';
+import { TransitionSeries, linearTiming, springTiming } from '@remotion/transitions';
+import { fade } from '@remotion/transitions/fade';
+import { slide } from '@remotion/transitions/slide';
+// Add other transitions as needed: wipe, flip, clockWipe
+import { loadFont } from '@remotion/google-fonts/YourChosenFont';
 import { VideoProps } from '../Root';
 
+const { fontFamily } = loadFont('normal', {
+  weights: ['400', '700'],
+  subsets: ['latin'],
+});
+
 export const Generated: React.FC<VideoProps> = ({
-  content,
-  branding,
-  audio,
-  metadata,
-  duration,
+  content, branding, audio, duration,
 }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
 
-  // Main composition return
   return (
     <AbsoluteFill style={{
-      background: /* Your brand-specific background from Step 2 */,
-      fontFamily: branding.font,
+      background: `linear-gradient(135deg, ${branding.colors.primary}, ${branding.colors.secondary})`,
+      fontFamily,
     }}>
-      {/* Audio components */}
-      {/* Scene components */}
+      {/* Audio */}
+      {audio.music?.staticPath && (
+        <Audio src={staticFile(audio.music.staticPath)} volume={0.3} />
+      )}
+      {audio.narration?.staticPath && (
+        <Audio src={staticFile(audio.narration.staticPath)} volume={1} />
+      )}
+
+      {/* Scenes using TransitionSeries */}
+      <TransitionSeries>
+        <TransitionSeries.Sequence durationInFrames={/* scene1 frames */}>
+          <HookScene /* props */ />
+        </TransitionSeries.Sequence>
+        <TransitionSeries.Transition
+          presentation={fade()}
+          timing={linearTiming({ durationInFrames: 15 })}
+        />
+        {/* ... more scenes and transitions */}
+      </TransitionSeries>
     </AbsoluteFill>
   );
 };
-
-// Scene components below (from Step 9.2)
 ```
 
-**Checklist:**
-- [ ] File exports `Generated` component
-- [ ] Imports match Step 9.1 plan
-- [ ] Uses `VideoProps` interface
-- [ ] Destructures props in function signature
-- [ ] Calls `useCurrentFrame()` and `useVideoConfig()` in main component
-
----
-
-### 10.2: Audio Integration
-
-**Add audio components in main composition:**
+**Scene component pattern:**
 
 ```typescript
-{/* Music */}
-{audio.music?.localPath && <Audio src={audio.music.localPath} />}
-
-{/* Narration */}
-{audio.narration?.localPath && <Audio src={audio.narration.localPath} />}
-```
-
-**Optional - beat-reactive logic:**
-
-If Step 5 included beat-synced transitions:
-
-```typescript
-const currentTime = frame / fps;
-
-// Find if we're near a beat
-const nearestBeat = audio.beats.find(beat =>
-  Math.abs(beat - currentTime) < 0.033 // Within 1 frame
-);
-
-const onBeat = nearestBeat !== undefined;
-
-// Pass onBeat to scenes or use for transitions
-```
-
-**Checklist:**
-- [ ] Audio components added with conditional rendering
-- [ ] Beat detection logic added (if Step 5 requires it)
-- [ ] Audio files use `localPath` property
-
----
-
-### 10.3: Scene Sequencing
-
-**Choose sequencing approach based on Step 5 (Transition Planning):**
-
-**Option A: TransitionSeries (if using @remotion/transitions):**
-
-```typescript
-import { TransitionSeries, linearTiming } from '@remotion/transitions';
-import { fade } from '@remotion/transitions/fade';
-// Other transition imports from Step 9.1
-
-<TransitionSeries>
-  {/* Scene 1 */}
-  <TransitionSeries.Sequence durationInFrames={/* from Step 9.4 */}>
-    <YourScene1Component />
-  </TransitionSeries.Sequence>
-
-  <TransitionSeries.Transition
-    presentation={fade()} // Or your planned transition from Step 5
-    timing={linearTiming({ durationInFrames: 15 })}
-  />
-
-  {/* Scene 2 */}
-  <TransitionSeries.Sequence durationInFrames={/* from Step 9.4 */}>
-    <YourScene2Component />
-  </TransitionSeries.Sequence>
-
-  {/* Repeat for all scenes */}
-</TransitionSeries>
-```
-
-**Option B: Sequence (if using manual transitions):**
-
-```typescript
-<Sequence from={0} durationInFrames={90}>
-  <YourScene1Component />
-</Sequence>
-
-<Sequence from={90} durationInFrames={150}>
-  <YourScene2Component />
-</Sequence>
-
-{/* Repeat for all scenes with calculated frame ranges from Step 9.4 */}
-```
-
-**Checklist:**
-- [ ] Used TransitionSeries or Sequence (based on Step 5 decision)
-- [ ] Frame ranges match Step 9.4 calculations
-- [ ] Transitions match Step 5 plan
-- [ ] All scenes accounted for
-
----
-
-### 10.4: Implement Scene Components
-
-**For each scene component from Step 9.2:**
-
-**Structure:**
-
-```typescript
-const YourSceneName: React.FC<{
-  // Props from Step 9.3
-}> = ({ /* destructure props */ }) => {
+const SceneName: React.FC<{
+  colors: VideoProps['branding']['colors'];
+  width: number;
+  height: number;
+  // scene-specific props
+}> = ({ colors, width, height }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Animation logic from Step 9.6
+  // Animations using frame + spring/interpolate
+  const opacity = spring({ frame, fps, from: 0, to: 1, config: { damping: 200 } });
+  const titleSize = height * 0.12; // Responsive sizing
 
   return (
-    <AbsoluteFill style={{
-      // Your brand-specific styles from Step 2
-    }}>
-      {/* Your scene content */}
+    <AbsoluteFill style={{ /* brand colors */ }}>
+      {/* Scene content */}
     </AbsoluteFill>
   );
 };
 ```
 
-**Implement animations using planned logic from Step 9.6:**
+---
 
-- Use `spring()` for physics-based animations
-- Use `interpolate()` for value mapping
-- Use `Easing` for custom timing curves
-- Apply responsive sizing from Step 9.5
+### Step 6: Validate & Render
 
-**Example of implementing a planned animation:**
+**Run this checklist (must pass 12/15):**
 
+1. Audio imported from `@remotion/media` (not `remotion`)
+2. Audio uses `staticFile()` with `staticPath`
+3. Conditional audio rendering (`{audio.music?.staticPath && ...}`)
+4. Font loaded via `@remotion/google-fonts`
+5. All 4 brand colors used (primary, secondary, accent, background)
+6. No hardcoded hex colors (all from `branding.colors`)
+7. No CSS animations or Tailwind `animate-*` classes
+8. All animations use `useCurrentFrame()` + `spring`/`interpolate`
+9. Scene durations calculated from fps (not hardcoded frame numbers)
+10. Content from props displayed (title, features, domain)
+11. Responsive sizing (font sizes relative to height, spacing relative to width)
+12. Transitions between scenes (TransitionSeries or Sequence)
+13. Logo displayed using `staticFile(branding.logo.staticPath)` or `branding.logo.url`
+14. Color contrast is readable (text visible against backgrounds)
+15. CTA scene shows `content.domain`
+
+**Call `render_video`** with:
+- `inputProps` — the full props object (content, branding, audio with staticPaths, metadata, duration)
+- `outputFileName` — descriptive name like `stripe-promo` or `acme-launch`
+
+Duration is automatically calculated from audio length via `calculateMetadata`.
+
+---
+
+## Remotion Rules
+
+**These rules are mandatory. Violating FORBIDDEN rules produces broken or silent videos.**
+
+### RULE: Animations
+
+**FORBIDDEN:**
+- CSS transitions (`transition`, `@keyframes`, `animation` CSS property)
+- Tailwind animation classes (`animate-spin`, `animate-bounce`, `animate-pulse`, etc.)
+- Framer Motion, react-spring, or any non-Remotion animation library
+- `setTimeout`, `setInterval`, `requestAnimationFrame`
+- React state for animation values (`useState` + `useEffect` for timing)
+
+**REQUIRED:**
+- All motion must use `useCurrentFrame()` with `spring()` or `interpolate()`
+- Write timing in seconds, multiply by fps: `2 * fps` = 2 seconds
+- Always clamp interpolation: `extrapolateRight: 'clamp'`
+- Use `interpolateColors()` for color transitions
+
+**Spring configs by personality:**
 ```typescript
-// From Step 9.6: Logo fade in and scale up
-const opacity = spring({ frame, fps, from: 0, to: 1 });
-const scale = spring({ frame, fps, from: 0.5, to: 1, config: { damping: 200 } });
+// Smooth (professional): no bounce
+spring({ frame, fps, from: 0, to: 1, config: { damping: 200 } })
 
-<div style={{
-  opacity,
-  transform: `scale(${scale})`
-}}>
-  <Img src={logo} />
-</div>
+// Snappy (modern): minimal bounce
+spring({ frame, fps, from: 0, to: 1, config: { damping: 20, stiffness: 200 } })
+
+// Bouncy (playful): visible bounce
+spring({ frame, fps, from: 0, to: 1, config: { damping: 8 } })
+
+// Heavy (dramatic): slow settle
+spring({ frame, fps, from: 0, to: 1, config: { damping: 15, stiffness: 80, mass: 2 } })
 ```
 
-**Use brand colors from Step 2:**
-
+**Easing options for `interpolate()`:**
 ```typescript
-// Correct - using extracted brand colors
-<div style={{
-  color: colors.accent,
-  background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-}}>
+import { Easing } from 'remotion';
+// Smooth: Easing.inOut(Easing.cubic)
+// Bounce landing: Easing.out(Easing.bounce)
+// Overshoot: Easing.out(Easing.back(1.5))
 ```
 
-**NOT this:**
+---
+
+### RULE: Audio
+
+**REQUIRED:**
+- Import: `import { Audio } from '@remotion/media';`
+- Use `staticFile()` for src: `<Audio src={staticFile(audio.music.staticPath)} />`
+- Conditional rendering: `{audio.music?.staticPath && <Audio ... />}`
+- Music volume: `0.2` to `0.4` (background level)
+- Narration volume: `1.0`
+
+**FORBIDDEN:**
+- `import { Audio } from 'remotion'` — this is `Html5Audio`, wrong component
+- Raw file paths as src (e.g., `/var/folders/.../music.mp3`)
+- Omitting conditional checks on audio paths
+
+**Trimming and timing:**
 ```typescript
-// Wrong - hardcoded generic colors
-<div style={{
-  color: '#ffffff',
-  background: 'linear-gradient(135deg, #0066FF, #003D99)',
-}}>
+const { fps } = useVideoConfig();
+// Trim: skip first 2 seconds, end at 10 seconds
+<Audio src={...} trimBefore={2 * fps} trimAfter={10 * fps} />
+// Delay: wrap in Sequence
+<Sequence from={1 * fps}><Audio src={...} /></Sequence>
+// Dynamic volume (fade in):
+<Audio src={...} volume={(f) =>
+  interpolate(f, [0, 1 * fps], [0, 1], { extrapolateRight: 'clamp' })
+} />
 ```
 
-**Checklist for each scene:**
-- [ ] Component signature matches Step 9.2 plan
-- [ ] Animations match Step 9.6 frame logic
-- [ ] Uses brand colors from `colors` prop (Step 2)
-- [ ] Uses responsive sizing from Step 9.5
-- [ ] Returns AbsoluteFill wrapper
-- [ ] No hardcoded values (all from props or calculations)
-
 ---
 
-### 10.5: Implement Advanced Features
+### RULE: Fonts
 
-**If Step 8 decided to include advanced features, implement them now.**
-
-**Refer to API Reference (Part 3) for each feature:**
-
-- Audio visualization → See "Audio Visualization API"
-- Text effects → See "Text Animation API"
-- Charts → See "Charts and Data Visualization API"
-- 3D graphics → See "3D Graphics with Three.js"
-- Skia effects → See "Skia for Advanced Effects"
-- Lottie → See "Lottie Animations"
-- Maps → See "Mapbox Integration"
-- Captions → See "Captions and Subtitles"
-
-**DO NOT guess implementation - follow API Reference exactly.**
-
-**Checklist:**
-- [ ] All Step 8 decided features implemented
-- [ ] Used correct imports from API Reference
-- [ ] Followed API Reference code patterns
-- [ ] Features integrate smoothly with scenes
-- [ ] Advanced features enhance (not distract from) content
-
----
-
-### 10.6: Styling with Tailwind
-
-**Use Tailwind classes for layout and basic styling:**
-
+**REQUIRED:**
+- Load fonts with `@remotion/google-fonts` before using them:
 ```typescript
-<div className="flex flex-col items-center justify-center p-24">
-  {/* Content */}
-</div>
+import { loadFont } from '@remotion/google-fonts/Inter';
+const { fontFamily } = loadFont('normal', {
+  weights: ['400', '700'],
+  subsets: ['latin'],
+});
+// Use fontFamily in style={{ fontFamily }}
 ```
+- Call `loadFont()` at module level (outside component), not inside render
 
-**Combine with inline styles for animations:**
+**FORBIDDEN:**
+- Setting `fontFamily` in CSS without loading the font first
+- Assuming fonts are pre-installed or available via `branding.font` alone
 
+---
+
+### RULE: Images & Assets
+
+**REQUIRED:**
+- Use `<Img>` from `remotion` (not `<img>`)
+- Use `staticFile()` for local assets in `public/`
+- For logo: prefer `staticFile(branding.logo.staticPath)`, fallback to `branding.logo.url`
+- Add `objectFit: 'contain'` to prevent stretching
+- All local files must be in `remotion-project/public/`
+
+**FORBIDDEN:**
+- Native `<img>` elements (won't wait for load, causes blank frames)
+- CSS `background-image` for important visuals
+- Absolute filesystem paths in src
+
+**Pattern:**
 ```typescript
-<div
-  className="text-center font-bold"
-  style={{
-    fontSize: height * 0.09, // Responsive from Step 9.5
-    opacity, // Animation from Step 9.6
-    color: colors.accent, // Brand color from Step 2
-  }}
->
-  {content.title}
-</div>
+import { Img, staticFile } from 'remotion';
+// Local asset
+<Img src={staticFile('images/logo-stripe.com.png')} style={{ width: 300, objectFit: 'contain' }} />
+// Remote URL fallback
+<Img src={branding.logo.url} style={{ width: 300, objectFit: 'contain' }} />
 ```
 
-**Tailwind is available (imported in Root.tsx):**
-- Use for: layout (flex, grid), spacing (p-, m-), alignment, basic colors
-- Don't use for: animations (use Remotion APIs), responsive sizing (use inline calculations)
-
-**Checklist:**
-- [ ] Used Tailwind for layout structure
-- [ ] Used inline styles for dynamic values (sizes, colors, animations)
-- [ ] No Tailwind animate classes (use Remotion animations instead)
-
 ---
 
-### 10.7: Final Code Review
-
-**Before saving the file, review:**
-
-**Brand Alignment:**
-- [ ] Uses extracted colors (not hardcoded generic colors)
-- [ ] Uses extracted font (branding.font)
-- [ ] Visual style matches brand personality (Step 2)
-
-**Content-Driven:**
-- [ ] Displays actual content from VideoProps
-- [ ] Scene structure matches content needs (Step 3)
-- [ ] No placeholder text or dummy content
-
-**Animation Quality:**
-- [ ] Animations match Step 4 plan
-- [ ] Frame logic implemented correctly (Step 9.6)
-- [ ] Smooth, natural motion (spring used where appropriate)
-- [ ] No abrupt cuts (transitions planned in Step 5)
-
-**Technical Correctness:**
-- [ ] All imports exist and are correct
-- [ ] No TypeScript errors (VideoProps used correctly)
-- [ ] Frame calculations match Step 9.4
-- [ ] Responsive sizing implemented (Step 9.5)
-
-**Code Quality:**
-- [ ] No repetitive code (use .map() for lists)
-- [ ] Component names are descriptive
-- [ ] Code is readable and well-organized
-- [ ] No commented-out code or TODOs
-
-**Checklist:**
-- [ ] All of above reviews completed
-- [ ] Code is unique to this brand/content (not generic template)
-- [ ] Ready for Step 11 (Quality Validation)
-
----
-
-## Step 11: Quality Validation (MANDATORY)
-
-**MANDATORY:** You MUST complete this entire validation checklist before proceeding to Step 12 (Render).
-
-This is the most important step - it prevents low-quality, generic videos.
-
----
-
-### Validation Checklist
-
-#### Part A: Brand Alignment (10 items)
-
-- [ ] **1. Logo displayed correctly**
-  - Logo from `branding.logo.url` is visible
-  - Logo is not stretched or distorted
-  - Logo appears in appropriate scene (usually hook or CTA)
-
-- [ ] **2. Primary color used**
-  - `branding.colors.primary` is the dominant color
-  - Used in backgrounds, headings, or major elements
-  - NOT replaced with hardcoded generic color
-
-- [ ] **3. Secondary color used**
-  - `branding.colors.secondary` is used for gradients or accents
-  - Complements primary color
-  - NOT replaced with hardcoded generic color
-
-- [ ] **4. Accent color used**
-  - `branding.colors.accent` is used for emphasis (CTAs, highlights)
-  - Provides visual contrast
-  - NOT replaced with hardcoded generic color
-
-- [ ] **5. Background color correct**
-  - `branding.colors.background` is used appropriately
-  - Provides good contrast with text
-  - Matches light/dark theme
-
-- [ ] **6. Font family applied**
-  - `branding.font` is set in root AbsoluteFill
-  - All text inherits the correct font
-  - Font is readable and matches brand
-
-- [ ] **7. Color contrast sufficient**
-  - Text is readable against backgrounds
-  - Light theme: dark text on light backgrounds
-  - Dark theme: light text on dark backgrounds
-  - Accent colors provide enough contrast
-
-- [ ] **8. Visual style matches brand personality**
-  - Professional brand → clean, minimal animations
-  - Playful brand → bouncy, dynamic animations
-  - Bold brand → dramatic, high-energy effects
-  - (Verify against Step 2 brand analysis)
-
-- [ ] **9. No hardcoded colors**
-  - Search code for '#' (hex colors)
-  - All colors come from `colors` prop
-  - Exception: rgba() for opacity variants is OK
-
-- [ ] **10. No generic placeholder branding**
-  - No "Example Company" or "Product Name" text
-  - No generic blue gradients (#0066FF)
-  - Everything is specific to this URL/brand
-
----
-
-#### Part B: Content Accuracy (5 items)
-
-- [ ] **11. Title displayed correctly**
-  - `content.title` appears in video
-  - Spelling and capitalization match extracted content
-  - Positioned prominently
-
-- [ ] **12. Description used**
-  - `content.description` or adapted version appears
-  - Accurately represents the product/service
-  - Not replaced with generic marketing copy
-
-- [ ] **13. Features shown**
-  - Displays actual features from `content.features[]`
-  - Limited to 3-5 most important features (not all)
-  - Features are benefits-focused, not just specs
-
-- [ ] **14. Domain/URL shown**
-  - `content.domain` appears in CTA scene
-  - Correct domain (not "example.com")
-  - Readable font size
-
-- [ ] **15. Content matches narration**
-  - Visual content aligns with script timing
-  - Key words appear on screen when spoken
-  - No content-narration mismatch
-
----
-
-#### Part C: Animation Quality (5 items)
-
-- [ ] **16. Smooth animations**
-  - All animations use spring() or interpolate()
-  - No abrupt jumps or cuts within scenes
-  - Natural, physics-based motion
-
-- [ ] **17. Varied animations**
-  - Each scene uses different animation types
-  - Not repetitive (e.g., all scenes fade in)
-  - Creative and unique to this content
-
-- [ ] **18. Correct frame timing**
-  - Animations start/end at planned frames (Step 9.4)
-  - Scene durations match calculations
-  - Total video length matches requested duration
-
-- [ ] **19. Responsive animations**
-  - Animations work at 1920x1080 resolution
-  - Elements don't overflow or get cut off
-  - Text is readable (uses responsive sizing from Step 9.5)
-
-- [ ] **20. Beat synchronization (if applicable)**
-  - Transitions occur on music beats (if Step 5 planned this)
-  - Visual emphasis matches narration emphasis
-  - Audio-visual sync is tight
-
----
-
-#### Part D: Technical Correctness (5 items)
-
-- [ ] **21. No TypeScript errors**
-  - All props typed correctly
-  - VideoProps interface used
-  - No `any` types (unless unavoidable)
-
-- [ ] **22. All imports valid**
-  - Imports match Step 9.1 plan
-  - No unused imports
-  - Imports are from correct packages (@remotion/...)
-
-- [ ] **23. Audio files referenced**
-  - `audio.music.localPath` used in <Audio />
-  - `audio.narration.localPath` used in <Audio />
-  - Conditional rendering (&&) for missing files
-
-- [ ] **24. Composition registered**
-  - Generated.tsx is imported in Root.tsx
-  - <Composition id="Generated" /> exists in Root.tsx
-  - Default props match VideoProps interface
-
-- [ ] **25. No console errors expected**
-  - No obvious runtime errors (missing props, undefined values)
-  - Conditional rendering for optional props (logo, heroImage)
-  - Frame calculations won't cause NaN or Infinity
-
----
-
-#### Part E: Production Quality (5 items)
-
-- [ ] **26. Eye-catching hook**
-  - First 3 seconds grab attention
-  - Dramatic reveal or bold statement
-  - Logo/title is impactful
-
-- [ ] **27. Clear visual hierarchy**
-  - Important elements are larger/brighter
-  - Text hierarchy: title > heading > body > caption
-  - Eye is guided through the composition
-
-- [ ] **28. Professional polish**
-  - No rough edges or unfinished elements
-  - Consistent styling throughout
-  - Looks like a high-quality production
-
-- [ ] **29. Clear call to action**
-  - CTA scene is persuasive
-  - Button/text is prominent
-  - URL is displayed clearly
-
-- [ ] **30. Aligns with video goal**
-  - Product launch → exciting, aspirational
-  - Explainer → clear, informative
-  - Social promo → bold, shareable
-  - (Verify against user's original request)
-
----
-
-### Validation Result
-
-**Count your checkmarks:**
-
-- **30/30:** Excellent - proceed to Step 12 (Render)
-- **25-29:** Good - fix remaining issues before rendering
-- **20-24:** Needs work - revisit planning steps (especially Steps 2-5)
-- **<20:** STOP - major issues detected, restart from Step 2
-
-**You MUST have at least 25/30 checked to proceed to rendering.**
-
-If you have unchecked items:
-1. Identify which step caused the issue (Step 2-10)
-2. Go back and fix the root cause
-3. Update the code in Generated.tsx
-4. Re-run this validation
-
-**Do not skip validation to "save time" - rendering a low-quality video wastes more time than fixing issues now.**
-
----
-
-## Step 12: Render Video
-
-**Prerequisites:**
-- Step 11 validation completed (minimum 25/30 items)
-- Generated.tsx written and saved
-- Composition registered in Root.tsx
-
----
-
-### 12.1: Call render_video MCP Tool
-
+### RULE: Sequencing & Timing
+
+**REQUIRED:**
+- Calculate durations from fps: `const sceneDuration = seconds * fps`
+- Use `<TransitionSeries>` for scene transitions (recommended)
+- Use `<Sequence>` for within-scene timing and delays
+- Frame counts across all scenes must equal total composition duration
+- Inside a Sequence, `useCurrentFrame()` returns local frame (starts at 0)
+
+**FORBIDDEN:**
+- Hardcoded frame numbers without fps calculation
+- Overlapping Sequences without TransitionSeries
+
+**Premounting** — load components before they play:
 ```typescript
-render_video({
-  inputProps: {
-    content: {
-      title: extracted.content.title,
-      description: extracted.content.description,
-      features: extracted.content.features,
-      heroImage: extracted.content.heroImage,
-      domain: extracted.metadata.domain,
-    },
-    branding: {
-      logo: extracted.branding.logo,
-      colors: extracted.branding.colors,
-      font: extracted.branding.font,
-      theme: extracted.branding.theme,
-    },
-    audio: {
-      music: audio.music,
-      narration: audio.narration,
-      beats: audio.beats,
-    },
-    metadata: {
-      domain: extracted.metadata.domain,
-      industry: extracted.metadata.industry,
-    },
-    duration: 30, // or user-requested duration
-  },
-  outputFileName: "product-name-promo" // descriptive filename
-})
-```
-
-**The tool will:**
-1. Bundle the Remotion project
-2. Render the Generated composition
-3. Save the video to `~/Videos/url-to-video/[outputFileName].mp4`
-
-**Typical render time:** 2-5 minutes for a 30-second video
-
----
-
-### 12.2: Return Result to User
-
-**After rendering succeeds, provide this summary:**
-
-```
-✨ Video rendered successfully!
-
-📹 File: [full path to video]
-⏱️ Duration: [duration] seconds
-📦 Size: [fileSize in MB]
-
-The video features:
-• Custom-designed scenes tailored to [brand name]
-• Music: [style] instrumental background
-• Narration: Professional AI voiceover
-• Beat-synced transitions [if applicable]
-• [Number] unique animated scenes
-• [List any advanced features used from Step 8]
-
-You can find the video at: [full path]
-```
-
-**Example:**
-
-```
-✨ Video rendered successfully!
-
-📹 File: ~/Videos/url-to-video/tabstack-promo.mp4
-⏱️ Duration: 30 seconds
-📦 Size: 12.5 MB
-
-The video features:
-• Custom-designed scenes tailored to TabStack
-• Music: Lo-fi instrumental background
-• Narration: Professional AI voiceover
-• Beat-synced transitions
-• 5 unique animated scenes
-• Audio visualization on features scene
-• TikTok-style captions for social media
-
-You can find the video at: /Users/username/Videos/url-to-video/tabstack-promo.mp4
+<Sequence from={2 * fps} premountFor={30}>
+  <HeavyComponent />
+</Sequence>
 ```
 
 ---
 
-### 12.3: Troubleshooting Render Errors
+### RULE: Transitions
 
-**Common errors:**
+**REQUIRED:**
+- Import from `@remotion/transitions` and sub-paths
+- Wrap scenes in `<TransitionSeries>` with `<TransitionSeries.Transition>` between them
 
-**"Composition 'Generated' not found"**
-- Fix: Verify Generated composition is registered in Root.tsx
-- Check: Import statement and <Composition> block exist
-
-**"Cannot find module '@remotion/transitions'"**
-- Fix: Missing package - run `npm install @remotion/transitions` in remotion-project/
-- Check: All advanced feature packages installed (Step 8 features)
-
-**"Invalid props"**
-- Fix: Ensure inputProps match VideoProps interface exactly
-- Check: All required fields present (content, branding, audio, metadata, duration)
-
-**"Audio file not found"**
-- Fix: Verify audio.music.localPath and audio.narration.localPath are correct
-- Check: Files exist at specified paths
-
-**"Render timeout"**
-- Fix: Video may be too complex (too many effects)
-- Check: Remove heavy Skia/Three.js effects or reduce duration
-
----
-
-# Part 3: API Reference
-
-**Purpose:** Detailed API documentation for implementing features planned in Steps 8-10.
-
-**How to use:**
-- Reference specific APIs when writing code in Step 10
-- Consult when evaluating advanced features in Step 8
-- Do NOT copy-paste entire sections - use relevant parts only
-
----
-
-## Core Remotion APIs
-
-### useCurrentFrame()
-
-**When to use:** In every scene component to get current frame number
-
-**Returns:** `number` - Current frame (0-based)
-
-**Example:**
+**Available transitions:**
 ```typescript
-const frame = useCurrentFrame();
-const opacity = frame < 30 ? frame / 30 : 1; // Fade in over first 30 frames
+import { fade } from '@remotion/transitions/fade';
+import { slide } from '@remotion/transitions/slide';
+import { wipe } from '@remotion/transitions/wipe';
+import { flip } from '@remotion/transitions/flip';
+import { clockWipe } from '@remotion/transitions/clock-wipe';
 ```
 
-**Important:**
-- Inside a `<Sequence>`, returns the **local frame** (relative to the sequence start)
-- Inside a `<Loop>`, resets to 0 for each iteration
-- Inside a `<Freeze>`, returns the frozen frame number
+**Timing options:**
+```typescript
+import { linearTiming, springTiming } from '@remotion/transitions';
+// Fixed duration:
+timing={linearTiming({ durationInFrames: 15 })} // 0.5s at 30fps
+// Physics-based:
+timing={springTiming({ config: { damping: 200 } })}
+```
+
+**Slide directions:**
+```typescript
+slide({ direction: 'from-left' })  // or from-right, from-top, from-bottom
+```
+
+**Match transition to personality:**
+| Personality | Transition |
+|------------|------------|
+| Modern/Tech | `slide()` |
+| Professional | `fade()` |
+| Dramatic | `wipe()` or `clockWipe()` |
+| Playful | `flip()` |
+| Minimal | `fade()` |
+
+**Important:** Transitions overlap adjacent scenes, so total composition length is shorter than sum of all sequence durations.
 
 ---
 
-### useVideoConfig()
+### RULE: Styling
 
-**When to use:** To get video dimensions, FPS, and duration
+**REQUIRED:**
+- Use brand colors from props (`branding.colors.primary`, etc.)
+- Responsive font sizing relative to video height:
+  - Hero title: `height * 0.10` to `height * 0.14`
+  - Section heading: `height * 0.07` to `height * 0.09`
+  - Body text: `height * 0.04` to `height * 0.06`
+  - Caption: `height * 0.03` to `height * 0.04`
+- Responsive spacing relative to dimensions:
+  - Padding: `width * 0.05` to `width * 0.08`
+  - Gaps: `height * 0.04` to `height * 0.06`
+- Use `fitText()` from `@remotion/layout-utils` for variable-length titles
+- `AbsoluteFill` as root container for every scene
 
-**Returns:** `{ fps: number; width: number; height: number; durationInFrames: number; id: string }`
+**FORBIDDEN:**
+- Hardcoded hex colors like `#0066FF` (must come from `branding.colors`)
+- Fixed pixel font sizes like `fontSize: 72` (must be relative)
+- Tailwind `animate-*` classes
 
-**Example:**
+**fitText pattern:**
 ```typescript
-const { fps, width, height } = useVideoConfig();
-const logoSize = Math.min(width, height) * 0.3; // Responsive sizing
-```
-
-**Use cases:**
-
-**1. Responsive sizing:**
-```typescript
-const { width, height } = useVideoConfig();
-
-const logoSize = Math.min(width, height) * 0.3;
-const padding = width * 0.05;
-```
-
-**2. Time calculations:**
-```typescript
-const { fps, durationInFrames } = useVideoConfig();
-
-const durationInSeconds = durationInFrames / fps;
-const halfway = durationInFrames / 2;
-```
-
----
-
-### spring()
-
-**When to use:** For natural, physics-based animations (preferred for most animations)
-
-**Parameters:**
-- `frame` - Current frame
-- `fps` - Frames per second
-- `from` - Start value (default: 0)
-- `to` - End value (default: 1)
-- `config` - Spring configuration (damping, mass, stiffness, overshootClamping)
-
-**Example:**
-```typescript
-const scale = spring({
-  frame,
-  fps,
-  from: 0.5,
-  to: 1,
-  config: {
-    damping: 200, // Higher = less bounce
-    mass: 1,
-    stiffness: 100,
-  },
+import { fitText } from '@remotion/layout-utils';
+const { fontSize } = fitText({
+  text: content.title,
+  withinWidth: width * 0.8,
+  fontFamily,
+  fontWeight: 'bold',
 });
 ```
 
-**Common damping values:**
-- `damping: 200` - Very stiff, minimal bounce (professional)
-- `damping: 100` - Moderate bounce (balanced)
-- `damping: 50` - High bounce (playful)
+---
+
+### RULE: staticFile
+
+**REQUIRED:**
+- All local files (audio, images) must be in `remotion-project/public/`
+- Reference with `staticFile('audio/music-123.mp3')` — path relative to `public/`
+- The MCP tools save files to `public/` automatically and return `staticPath`
+
+**FORBIDDEN:**
+- Absolute filesystem paths (e.g., `/var/folders/.../music.mp3`)
+- Paths not relative to `public/`
 
 ---
+
+### RULE: Text Animations
+
+**Typewriter effect** — use string slicing, never per-character opacity:
+```typescript
+const frame = useCurrentFrame();
+const { fps } = useVideoConfig();
+const text = 'Hello World';
+const charsToShow = Math.floor(interpolate(frame, [0, 2 * fps], [0, text.length], {
+  extrapolateRight: 'clamp',
+}));
+<div>{text.slice(0, charsToShow)}</div>
+```
+
+**Word-by-word reveal:**
+```typescript
+const words = text.split(' ');
+{words.map((word, i) => {
+  const delay = i * 5; // 5 frames between words
+  const opacity = spring({ frame: frame - delay, fps, from: 0, to: 1 });
+  return <span key={i} style={{ opacity, marginRight: 10 }}>{word}</span>;
+})}
+```
+
+---
+
+## API Quick Reference
+
+### spring()
+```typescript
+spring({ frame, fps, from: 0, to: 1, config: { damping: 200 } })
+// Optional: delay (frames), durationInFrames (stretches animation)
+```
 
 ### interpolate()
-
-**When to use:** For linear value mapping, custom timing curves, or non-physics animations
-
-**Parameters:**
-- `input` - Input value (usually `frame`)
-- `inputRange` - Array of input milestones `[start, end]`
-- `outputRange` - Array of output values `[startValue, endValue]`
-- `options` - Extrapolation and easing
-
-**Example:**
 ```typescript
-const opacity = interpolate(
-  frame,
-  [0, 30, 90, 120], // Frame milestones
-  [0, 1, 1, 0], // Fade in, hold, fade out
-  {
-    extrapolateLeft: 'clamp', // Don't go below 0
-    extrapolateRight: 'clamp', // Don't go above 1
-  }
-);
+interpolate(frame, [0, 2 * fps], [0, 1], {
+  extrapolateLeft: 'clamp',
+  extrapolateRight: 'clamp',
+  easing: Easing.inOut(Easing.cubic),
+})
 ```
-
-**With easing:**
-```typescript
-import { Easing } from 'remotion';
-
-const position = interpolate(
-  frame,
-  [0, 60],
-  [0, 500],
-  {
-    easing: Easing.bezier(0.42, 0, 0.58, 1), // Ease in-out
-  }
-);
-```
-
----
 
 ### interpolateColors()
-
-**When to use:** Smoothly interpolate between two colors (hex, rgb, rgba, hsl)
-
-**Example:**
 ```typescript
 import { interpolateColors } from 'remotion';
-
-const color = interpolateColors(
-  frame,
-  [0, 100],
-  ['#ff0000', '#0000ff'] // red to blue
-);
+const color = interpolateColors(frame, [0, 2 * fps], [colors.primary, colors.accent]);
 ```
-
-**Supported color formats:**
-```typescript
-// Hex colors
-interpolateColors(frame, [0, 100], ['#ff0000', '#0000ff']);
-
-// RGB
-interpolateColors(frame, [0, 100], ['rgb(255, 0, 0)', 'rgb(0, 0, 255)']);
-
-// RGBA (with opacity)
-interpolateColors(frame, [0, 100], ['rgba(255, 0, 0, 1)', 'rgba(0, 0, 255, 0.5)']);
-
-// HSL
-interpolateColors(frame, [0, 100], ['hsl(0, 100%, 50%)', 'hsl(240, 100%, 50%)']);
-```
-
-**Multi-color gradients:**
-```typescript
-// Fade through multiple colors
-const color = interpolateColors(
-  frame,
-  [0, 50, 100],
-  ['#ff0000', '#00ff00', '#0000ff'] // red → green → blue
-);
-```
-
----
-
-### AbsoluteFill
-
-**When to use:** A layout component that fills the entire composition space - use as root container for scenes
-
-**Example:**
-```typescript
-import { AbsoluteFill } from 'remotion';
-
-<AbsoluteFill
-  style={{
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
-  }}
->
-  <h1>Centered Content</h1>
-</AbsoluteFill>
-```
-
-**What it does:**
-- Sets `position: absolute`
-- Sets `top: 0`, `left: 0`, `right: 0`, `bottom: 0`
-- Sets `width: 100%`, `height: 100%`
-- Adds `display: flex` by default
-
-**Common patterns:**
-
-**Centered content:**
-```typescript
-<AbsoluteFill
-  style={{
-    justifyContent: 'center',
-    alignItems: 'center',
-  }}
->
-  <Logo />
-</AbsoluteFill>
-```
-
-**Background + foreground layers:**
-```typescript
-<>
-  {/* Background layer */}
-  <AbsoluteFill style={{ backgroundColor: '#000' }} />
-
-  {/* Foreground content */}
-  <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center' }}>
-    <Content />
-  </AbsoluteFill>
-</>
-```
-
----
-
-### Sequence
-
-**When to use:** Display content for a specific time range
-
-**Example:**
-```typescript
-import { Sequence } from 'remotion';
-
-<Sequence from={0} durationInFrames={90}>
-  <Scene1 />
-</Sequence>
-
-<Sequence from={90} durationInFrames={150}>
-  <Scene2 />
-</Sequence>
-```
-
-**Props:**
-- `from` - Start frame (required)
-- `durationInFrames` - Duration in frames (optional)
-- `name` - Label for timeline (optional)
-- `layout` - `"absolute-fill"` (default) or `"none"`
-
----
-
-### Easing
-
-**When to use:** Custom timing curves for interpolate()
-
-**Available easing functions:**
-```typescript
-import { Easing } from 'remotion';
-
-// Basic easing
-Easing.linear
-Easing.ease
-Easing.quad
-Easing.cubic
-
-// Directional
-Easing.in(Easing.quad)      // Accelerate
-Easing.out(Easing.quad)     // Decelerate
-Easing.inOut(Easing.quad)   // Accelerate then decelerate
-
-// Special effects
-Easing.bounce               // Bouncy landing
-Easing.elastic(1)           // Elastic spring
-Easing.back(1.5)            // Overshoot effect
-
-// Bezier (custom curve)
-Easing.bezier(0.42, 0, 0.58, 1) // Custom cubic bezier
-```
-
----
-
-## Sequencing APIs
-
-### Loop
-
-**When to use:** Repeat animations for a specified number of times or infinitely
-
-```typescript
-import { Loop } from 'remotion';
-
-<Loop durationInFrames={50} times={3}>
-  <Animation />
-</Loop>
-
-// Infinite loop
-<Loop durationInFrames={50}>
-  <Animation />
-</Loop>
-```
-
-**Props:**
-- `durationInFrames` - Frame count for each iteration (required)
-- `times` - Number of repetitions (default: `Infinity`)
-- `layout` - `"absolute-fill"` (default) or `"none"`
-
----
-
-### Freeze
-
-**When to use:** Hold a specific frame while the rest of the timeline progresses
-
-```typescript
-import { Freeze } from 'remotion';
-
-<Freeze frame={30}>
-  <BlueSquare />
-</Freeze>
-```
-
-**Props:**
-- `frame` - Frame number to freeze at (required)
-- `active` - Boolean or callback to conditionally disable freezing
-
-**Effects:**
-- `useCurrentFrame()` inside always returns the specified frame
-- `<Video>` elements are paused
-- `<Audio>` elements are muted
-
----
-
-## Transition APIs
 
 ### TransitionSeries
-
-**When to use:** For smooth scene transitions (Step 5 decision)
-
 ```typescript
-import { TransitionSeries, linearTiming } from '@remotion/transitions';
-import { fade } from '@remotion/transitions/fade';
-
 <TransitionSeries>
   <TransitionSeries.Sequence durationInFrames={90}>
-    <Scene1 />
+    <SceneA />
   </TransitionSeries.Sequence>
-
   <TransitionSeries.Transition
     presentation={fade()}
     timing={linearTiming({ durationInFrames: 15 })}
   />
-
   <TransitionSeries.Sequence durationInFrames={150}>
-    <Scene2 />
-  </TransitionSeries.Sequence>
-</TransitionSeries>
-```
-
----
-
-### Available Transitions
-
-**fade()** - Cross-fade between scenes
-
-**slide({ direction })** - Slide in from direction
-- Directions: `'from-left'`, `'from-right'`, `'from-top'`, `'from-bottom'`
-
-**wipe({ direction })** - Wipe transition
-- Directions: `'from-left'`, `'from-right'`, `'from-top'`, `'from-bottom'`
-
-**clockWipe()** - Circular wipe (clock hand motion)
-
-**flip({ direction })** - 3D flip
-- Directions: `'horizontal'`, `'vertical'`
-
----
-
-## Media APIs
-
-### Audio
-
-**When to use:** For music, narration, or sound effects
-
-```typescript
-import { Audio } from '@remotion/media';
-
-<Audio src={audio.music.localPath} volume={0.8} />
-```
-
-**Props:**
-- `src` - Audio file path
-- `volume` - 0.0 to 1.0 (default: 1.0)
-- `startFrom` - Frame to start playback
-- `endAt` - Frame to end playback
-
-**Important:** Always import from `@remotion/media`, not `remotion`
-
----
-
-### Img
-
-**When to use:** For logos, screenshots, or images
-
-```typescript
-import { Img } from 'remotion';
-
-<Img
-  src={branding.logo.url}
-  style={{
-    width: 300,
-    height: 300,
-    objectFit: 'contain',
-  }}
-/>
-```
-
-**IMPORTANT:** Use `Img` instead of `<img>` for better rendering performance.
-
----
-
-### OffthreadVideo
-
-**When to use:** Performance-optimized video component for embedding videos
-
-```bash
-npx remotion add @remotion/offthread-video
-```
-
-```typescript
-import { OffthreadVideo } from '@remotion/offthread-video';
-import { staticFile } from 'remotion';
-
-<OffthreadVideo src={staticFile('video.mp4')} />
-```
-
-**Why use OffthreadVideo?**
-- Faster rendering - Video decoding happens off the main thread
-- Better performance - Doesn't block other rendering operations
-- Same API - Works like regular `<Video>` component
-
-**When to use:**
-- Embedding multiple videos in one composition
-- Large video files (better performance)
-- Complex compositions with many elements
-- NOT for browser playback (renders only)
-
----
-
-## Layout & Text APIs
-
-### fitText()
-
-**When to use:** When text length is variable and must fit within a fixed width
-
-```bash
-npx remotion add @remotion/layout-utils
-```
-
-```typescript
-import { fitText } from '@remotion/layout-utils';
-
-const { fontSize } = fitText({
-  text: content.title,
-  withinWidth: width * 0.8,
-  fontFamily: branding.font,
-  fontWeight: 'bold',
-});
-
-<div style={{ fontSize }}>{content.title}</div>
-```
-
----
-
-### measureText()
-
-**When to use:** Get text dimensions
-
-```typescript
-import { measureText } from '@remotion/layout-utils';
-
-const { width, height } = measureText({
-  text: 'Hello World',
-  fontFamily: 'Arial',
-  fontSize: 32,
-  fontWeight: 'bold',
-});
-```
-
----
-
-## Advanced Feature APIs
-
-### Audio Visualization
-
-**When to use:** Decided in Step 8 (music videos, audio-heavy content)
-
-```bash
-npx remotion add @remotion/media
-```
-
-**useWindowedAudioData() - Get audio frequency data for current frame:**
-
-```typescript
-import { useWindowedAudioData, visualizeAudio } from '@remotion/media';
-import { Audio } from '@remotion/media';
-
-const MyComponent = () => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const audioData = useWindowedAudioData({
-    src: audio.music.localPath,
-    startFrom: 0,
-  });
-
-  if (!audioData) return null;
-
-  const visualization = visualizeAudio({
-    fps,
-    frame,
-    audioData,
-    numberOfSamples: 128, // Number of frequency bars
-  });
-
-  // visualization is an array of values (0-1) for each frequency bar
-  return (
-    <>
-      <Audio src={audio.music.localPath} />
-      <div style={{ display: 'flex', alignItems: 'flex-end', height: 200 }}>
-        {visualization.map((value, i) => (
-          <div
-            key={i}
-            style={{
-              width: 10,
-              height: value * 200,
-              backgroundColor: 'white',
-              marginRight: 2,
-            }}
-          />
-        ))}
-      </div>
-    </>
-  );
-};
-```
-
----
-
-### 3D Graphics
-
-**When to use:** Decided in Step 8 (product showcases, tech demos)
-
-```bash
-npx remotion add @remotion/three
-npm i three @react-three/fiber @react-three/drei
-```
-
-**Basic 3D scene:**
-
-```typescript
-import { ThreeCanvas } from '@remotion/three';
-import { useCurrentFrame } from 'remotion';
-
-const MyComponent = () => {
-  const frame = useCurrentFrame();
-
-  return (
-    <ThreeCanvas>
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} />
-      <mesh rotation={[0, frame * 0.01, 0]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="orange" />
-      </mesh>
-    </ThreeCanvas>
-  );
-};
-```
-
-**Load 3D models (GLTF/GLB):**
-
-```typescript
-import { useGLTF } from '@react-three/drei';
-import { staticFile } from 'remotion';
-
-const Model = () => {
-  const { scene } = useGLTF(staticFile('model.glb'));
-  return <primitive object={scene} />;
-};
-```
-
----
-
-### Captions and Subtitles
-
-**When to use:** Decided in Step 8 (social media videos, accessibility)
-
-```bash
-npx remotion add @remotion/captions
-```
-
-**TikTok-style captions:**
-
-```typescript
-import { createTikTokStyleCaptions } from '@remotion/captions';
-import { useDelayRender } from 'remotion';
-import { useState, useEffect } from 'react';
-
-const MyComponent = () => {
-  const { delayRender, continueRender } = useDelayRender();
-  const [handle] = useState(() => delayRender());
-  const [captions, setCaptions] = useState(null);
-
-  useEffect(() => {
-    fetch('/captions.json')
-      .then((res) => res.json())
-      .then((data) => {
-        setCaptions(data);
-        continueRender(handle);
-      });
-  }, [handle, continueRender]);
-
-  if (!captions) return null;
-
-  const { pages } = createTikTokStyleCaptions({
-    captions,
-    combineTokensWithinMilliseconds: 200,
-  });
-
-  return <div>{/* Render pages */}</div>;
-};
-```
-
----
-
-### Skia Effects
-
-**When to use:** Decided in Step 8 (custom graphics, blur, gradients)
-
-```bash
-npx remotion add @remotion/skia
-npm i @shopify/react-native-skia
-```
-
-```typescript
-import { SkiaCanvas } from '@remotion/skia';
-import { Circle, Group } from '@shopify/react-native-skia';
-
-const MyComponent = () => {
-  const frame = useCurrentFrame();
-
-  return (
-    <SkiaCanvas width={1920} height={1080}>
-      <Group>
-        <Circle cx={frame * 5} cy={100} r={50} color="blue" />
-      </Group>
-    </SkiaCanvas>
-  );
-};
-```
-
----
-
-### Lottie Animations
-
-**When to use:** Decided in Step 8 (existing animations, character animations)
-
-```bash
-npx remotion add @remotion/lottie
-npm i lottie-web
-```
-
-```typescript
-import { Lottie } from '@remotion/lottie';
-import { staticFile } from 'remotion';
-import { useState, useEffect } from 'react';
-
-const MyComponent = () => {
-  const [animationData, setAnimationData] = useState(null);
-
-  useEffect(() => {
-    fetch(staticFile('animation.json'))
-      .then((res) => res.json())
-      .then(setAnimationData);
-  }, []);
-
-  if (!animationData) return null;
-
-  return <Lottie animationData={animationData} />;
-};
-```
-
----
-
-### Visual Effects
-
-**Light leaks (cinematic overlay effects):**
-
-```bash
-npx remotion add @remotion/light-leaks
-```
-
-```typescript
-import { TransitionSeries } from '@remotion/transitions';
-import { LightLeak } from '@remotion/light-leaks';
-
-<TransitionSeries>
-  <TransitionSeries.Sequence durationInFrames={60}>
-    <SceneA />
-  </TransitionSeries.Sequence>
-
-  <TransitionSeries.Overlay durationInFrames={30}>
-    <LightLeak seed={5} hueShift={240} /> {/* Blue-tinted */}
-  </TransitionSeries.Overlay>
-
-  <TransitionSeries.Sequence durationInFrames={60}>
     <SceneB />
   </TransitionSeries.Sequence>
 </TransitionSeries>
 ```
 
-**Noise and texture effects:**
-
-```bash
-npx remotion add @remotion/noise
-```
-
+### Audio
 ```typescript
-import { noise2D } from '@remotion/noise';
-
-const MyComponent = () => {
-  const frame = useCurrentFrame();
-
-  // 2D noise: returns value between -1 and 1
-  const noiseValue = noise2D('seed', frame * 0.01, 0);
-
-  return (
-    <div style={{ opacity: (noiseValue + 1) / 2 }}>
-      Animated texture
-    </div>
-  );
-};
+import { Audio } from '@remotion/media';
+<Audio src={staticFile(audio.music.staticPath)} volume={0.3} />
 ```
 
----
-
-## Utility APIs
-
-### staticFile()
-
-**When to use:** Reference files in the `public/` folder
-
+### Img
 ```typescript
 import { Img, staticFile } from 'remotion';
-
-const myImage = staticFile('/my-image.png');
-<Img src={myImage} />
+<Img src={staticFile(branding.logo.staticPath)} style={{ width: 300, objectFit: 'contain' }} />
+// Or remote fallback:
+<Img src={branding.logo.url} style={{ width: 300, objectFit: 'contain' }} />
 ```
 
-**Setup:**
-- Create a `public/` folder at project root (same directory as `package.json`)
-- Store assets like images, fonts, and audio files in this folder
-
-**Returns:** Encoded URL reference: `/static-32e8nd/my-image.png`
-
----
-
-### random()
-
-**When to use:** Deterministic pseudorandom values for consistent rendering
-
+### staticFile
 ```typescript
-import { random } from 'remotion';
-
-const rand = random(1); // Always returns 0.07301638228818774
-const rand2 = random('my-seed'); // Consistent output for same seed
-
-// Example: Random coordinates
-const randomCoordinates = new Array(10).fill(true).map((a, i) => ({
-  x: random(`random-x-${i}`),
-  y: random(`random-y-${i}`),
-}));
+import { staticFile } from 'remotion';
+staticFile('audio/music-123.mp3') // resolves to file in public/audio/
+staticFile('images/logo-stripe.com.png') // resolves to file in public/images/
 ```
 
-**Why use this?** `Math.random()` produces inconsistent values during multi-threaded rendering.
-
----
-
-### prefetch()
-
-**When to use:** Preload images and assets before they appear on screen
-
+### loadFont
 ```typescript
-import { prefetch } from 'remotion';
-import { useEffect } from 'react';
-
-const MyComponent = () => {
-  useEffect(() => {
-    // Prefetch images
-    const { free, waitUntilDone } = prefetch('https://example.com/image.png');
-
-    // Optional: wait for prefetch to complete
-    waitUntilDone().then(() => {
-      console.log('Image preloaded!');
-    });
-
-    // Cleanup
-    return () => {
-      free();
-    };
-  }, []);
-
-  return <img src="https://example.com/image.png" />;
-};
+import { loadFont } from '@remotion/google-fonts/Inter';
+const { fontFamily } = loadFont('normal', { weights: ['400', '700'], subsets: ['latin'] });
 ```
 
----
-
-### delayRender() / continueRender()
-
-**When to use:** Pause rendering for async operations like data fetching or font loading
-
+### fitText
 ```typescript
-import { useDelayRender } from 'remotion';
-import { useState, useEffect } from 'react';
-
-const MyComponent = () => {
-  const { delayRender, continueRender, cancelRender } = useDelayRender();
-  const [handle] = useState(() => delayRender());
-
-  useEffect(() => {
-    fetchData()
-      .then(() => continueRender(handle))
-      .catch((err) => cancelRender(err));
-  }, [handle]);
-
-  return <div>Content</div>;
-};
+import { fitText } from '@remotion/layout-utils';
+const { fontSize } = fitText({ text, withinWidth: width * 0.8, fontFamily, fontWeight: 'bold' });
 ```
 
-**Important:**
-- Must call `continueRender()` within 30 seconds or rendering fails
-- Use `useDelayRender()` hook (recommended) over direct `delayRender()` import
-- Call `delayRender()` inside `useState()` to avoid creating multiple handles
-
----
-
-### getRemotionEnvironment()
-
-**When to use:** Detect the current Remotion environment (rendering, preview, or regular browser)
-
+### Sequence
 ```typescript
-import { getRemotionEnvironment } from 'remotion';
-
-const env = getRemotionEnvironment();
-
-if (env.isRendering) {
-  console.log('Rendering video...');
-}
-
-if (env.isPlayer) {
-  console.log('In Remotion Player');
-}
-
-if (env.isStudio) {
-  console.log('In Remotion Studio');
-}
+<Sequence from={3 * fps} durationInFrames={5 * fps}>
+  <MyComponent />
+</Sequence>
 ```
 
-**Returns:**
+### useVideoConfig
 ```typescript
-{
-  isRendering: boolean;  // True during npx remotion render
-  isPlayer: boolean;     // True in Remotion Player
-  isStudio: boolean;     // True in Remotion Studio (preview)
-}
+const { fps, width, height, durationInFrames } = useVideoConfig();
 ```
-
----
-
-### getInputProps()
-
-**When to use:** Get the props passed to a composition programmatically
-
-```typescript
-import { getInputProps } from 'remotion';
-
-const MyComponent = () => {
-  const inputProps = getInputProps();
-
-  console.log(inputProps);
-  // { title: 'My Video', color: '#ff0000' }
-
-  return <div>{inputProps.title}</div>;
-};
-```
-
----
-
-## Common Patterns
-
-**Purpose:** Small code snippets (10-20 lines max) for common animation patterns.
-
-**IMPORTANT:** These are NOT templates to copy. Use as reference for specific techniques only.
-
----
-
-### Pattern: Fade In
-
-```typescript
-const opacity = spring({ frame, fps, from: 0, to: 1 });
-
-<div style={{ opacity }}>
-  {content}
-</div>
-```
-
----
-
-### Pattern: Slide In from Left
-
-```typescript
-const translateX = spring({ frame, fps, from: -500, to: 0 });
-
-<div style={{ transform: `translateX(${translateX}px)` }}>
-  {content}
-</div>
-```
-
----
-
-### Pattern: Scale and Fade Combined
-
-```typescript
-const opacity = spring({ frame, fps, from: 0, to: 1 });
-const scale = spring({ frame, fps, from: 0.8, to: 1 });
-
-<div style={{
-  opacity,
-  transform: `scale(${scale})`,
-}}>
-  {content}
-</div>
-```
-
----
-
-### Pattern: Staggered List Reveal
-
-```typescript
-{items.map((item, i) => {
-  const delay = i * 20; // Frames between each item
-
-  const opacity = spring({
-    frame: frame - delay,
-    fps,
-    from: 0,
-    to: 1,
-  });
-
-  return (
-    <div key={i} style={{ opacity }}>
-      {item}
-    </div>
-  );
-})}
-```
-
----
-
-### Pattern: Typewriter Text Effect
-
-```typescript
-const charsRevealed = Math.floor(
-  interpolate(frame, [0, 60], [0, text.length], {
-    extrapolateRight: 'clamp',
-  })
-);
-
-<div>
-  {text.substring(0, charsRevealed)}
-</div>
-```
-
----
-
-### Pattern: Pulsing Element
-
-```typescript
-const pulse = 1 + Math.sin(frame / 15) * 0.1; // Oscillate between 0.9 and 1.1
-
-<div style={{ transform: `scale(${pulse})` }}>
-  {content}
-</div>
-```
-
----
-
-### Pattern: Gradient Background with Animation
-
-```typescript
-const angle = interpolate(frame, [0, 150], [0, 360]);
-
-<div style={{
-  background: `linear-gradient(${angle}deg, ${colors.primary}, ${colors.secondary})`,
-}}>
-  {content}
-</div>
-```
-
----
-
-### Pattern: Beat-Reactive Animation
-
-```typescript
-const currentTime = frame / fps;
-
-const nearestBeat = audio.beats.find(beat =>
-  Math.abs(beat - currentTime) < 0.033
-);
-
-const scale = nearestBeat ? 1.2 : 1;
-
-<div style={{ transform: `scale(${scale})` }}>
-  {content}
-</div>
-```
-
----
-
-### Pattern: Responsive Text Sizing
-
-```typescript
-const { fontSize } = fitText({
-  text: content.title,
-  withinWidth: width * 0.8,
-  fontFamily: branding.font,
-  fontWeight: 'bold',
-});
-
-<div style={{ fontSize }}>
-  {content.title}
-</div>
-```
-
----
-
-### Pattern: Conditional Animation (appears mid-scene)
-
-```typescript
-// Scene is 150 frames, text appears at frame 50
-
-const relativeFrame = frame - 50; // Starts at -50, becomes 0 at frame 50
-
-const opacity = relativeFrame < 0
-  ? 0
-  : spring({ frame: relativeFrame, fps, from: 0, to: 1 });
-
-<div style={{ opacity }}>
-  {content}
-</div>
-```
-
----
-
-**Remember:** These are individual techniques. Combine them creatively based on your Step 4 (Animation Planning) decisions.
-
----
-
-## Anti-Patterns (What NOT to Do)
-
-**Purpose:** Common mistakes that result in low-quality videos or broken renders.
-
----
-
-### Anti-Pattern 1: Using Hardcoded Colors
-
-**Problem:** Ignores extracted brand colors, creates generic-looking videos
-
-**Wrong:**
-```typescript
-<div style={{
-  background: 'linear-gradient(135deg, #0066FF, #003D99)',
-  color: '#FFFFFF',
-}}>
-```
-
-**Correct:**
-```typescript
-<div style={{
-  background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-  color: colors.background,
-}}>
-```
-
----
-
-### Anti-Pattern 2: Copying Template Code
-
-**Problem:** Results in generic videos that look identical for different brands
-
-**Wrong:**
-- Copying entire example code
-- Using hardcoded scene structure (5 scenes, specific durations)
-- Generic animations that don't match brand personality
-
-**Correct:**
-- Design scenes based on Step 3 (Scene Design)
-- Plan animations based on Step 4 (Animation Planning)
-- Create unique code for each brand/content
-
----
-
-### Anti-Pattern 3: Using CSS Animations
-
-**Problem:** CSS animations auto-play and cause flickering/timing issues in Remotion
-
-**Wrong:**
-```typescript
-<div className="animate-bounce"> {/* Tailwind animate class */}
-```
-
-```css
-@keyframes slideIn {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
-}
-
-.slide { animation: slideIn 1s; } /* Auto-playing CSS */
-```
-
-**Correct:**
-```typescript
-const translateX = spring({ frame, fps, from: -500, to: 0 });
-
-<div style={{ transform: `translateX(${translateX}px)` }}>
-```
-
----
-
-### Anti-Pattern 4: Not Using useCurrentFrame()
-
-**Problem:** Animations won't be tied to video timeline, causes render issues
-
-**Wrong:**
-```typescript
-const [opacity, setOpacity] = useState(0);
-
-useEffect(() => {
-  setTimeout(() => setOpacity(1), 1000); // Time-based, not frame-based
-}, []);
-```
-
-**Correct:**
-```typescript
-const frame = useCurrentFrame();
-const { fps } = useVideoConfig();
-
-const opacity = spring({ frame, fps, from: 0, to: 1 });
-```
-
----
-
-### Anti-Pattern 5: Ignoring Responsive Sizing
-
-**Problem:** Text overflows or is too small, elements get cut off
-
-**Wrong:**
-```typescript
-<div style={{ fontSize: 72 }}> {/* Fixed pixel size */}
-  {content.title}
-</div>
-```
-
-**Correct:**
-```typescript
-const { width, height } = useVideoConfig();
-
-const { fontSize } = fitText({
-  text: content.title,
-  withinWidth: width * 0.8,
-  fontFamily: branding.font,
-  fontWeight: 'bold',
-});
-
-<div style={{ fontSize }}>
-  {content.title}
-</div>
-```
-
----
-
-### Anti-Pattern 6: Skipping Planning Steps
-
-**Problem:** Results in poor design decisions, requires rework
-
-**Wrong:**
-- Going straight from Step 1 (Extract) to Step 10 (Write Code)
-- Skipping Step 2 (Brand Analysis)
-- Skipping Steps 3-5 (Scene/Animation/Transition Planning)
-- Skipping Step 8 (Advanced Features Evaluation)
-
-**Correct:**
-- Follow all 12 steps in order
-- Complete validation checkpoints
-- Make design decisions before coding
-
----
-
-### Anti-Pattern 7: Using Framer Motion or react-spring
-
-**Problem:** These libraries are not compatible with Remotion's rendering
-
-**Wrong:**
-```typescript
-import { motion } from 'framer-motion';
-
-<motion.div animate={{ opacity: 1 }}> {/* Won't render correctly */}
-```
-
-**Correct:**
-```typescript
-import { spring } from 'remotion';
-
-const opacity = spring({ frame, fps, from: 0, to: 1 });
-
-<div style={{ opacity }}>
-```
-
----
-
-### Anti-Pattern 8: Not Checking Advanced Features
-
-**Problem:** Missing opportunities for high-quality visuals
-
-**Wrong:**
-- Skipping Step 8 (Advanced Features Decision)
-- Assuming advanced features are "too complex"
-- Using basic animations when content calls for more
-
-**Correct:**
-- Evaluate all 7 advanced feature categories in Step 8
-- Use features when they enhance the content
-- Reference API documentation for implementation
-
----
-
-### Anti-Pattern 9: Hardcoding Frame Numbers
-
-**Problem:** Breaks when video duration changes
-
-**Wrong:**
-```typescript
-<Sequence from={0} durationInFrames={90}> {/* Hardcoded */}
-<Sequence from={90} durationInFrames={150}> {/* Hardcoded */}
-```
-
-**Correct:**
-```typescript
-const hookDuration = 3 * fps; // Duration from Step 3
-const problemDuration = 5 * fps;
-
-<Sequence from={0} durationInFrames={hookDuration}>
-<Sequence from={hookDuration} durationInFrames={problemDuration}>
-```
-
----
-
-### Anti-Pattern 10: Skipping Quality Validation
-
-**Problem:** Renders low-quality video, wastes time re-rendering
-
-**Wrong:**
-- Going straight from Step 10 (Write Code) to Step 12 (Render)
-- Skipping Step 11 (Quality Validation)
-- Not checking brand alignment, content accuracy, or animation quality
-
-**Correct:**
-- Complete all 30 validation checklist items (Step 11)
-- Fix issues before rendering
-- Achieve minimum 25/30 score
-
----
-
-### Anti-Pattern 11: Missing Audio Files
-
-**Problem:** Render fails or produces silent video
-
-**Wrong:**
-```typescript
-<Audio src={audio.music.localPath} /> {/* No conditional check */}
-```
-
-**Correct:**
-```typescript
-{audio.music?.localPath && <Audio src={audio.music.localPath} />}
-{audio.narration?.localPath && <Audio src={audio.narration.localPath} />}
-```
-
----
-
-### Anti-Pattern 12: Not Registering Composition
-
-**Problem:** "Composition not found" error when rendering
-
-**Wrong:**
-- Writing Generated.tsx but forgetting to update Root.tsx
-
-**Correct:**
-- Always register composition in Root.tsx:
-```typescript
-import { Generated } from './compositions/Generated';
-
-<Composition
-  id="Generated"
-  component={Generated}
-  durationInFrames={900}
-  fps={30}
-  width={1920}
-  height={1080}
-  defaultProps={{ /* ... */ }}
-/>
-```
-
----

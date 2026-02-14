@@ -1,20 +1,21 @@
 import React from 'react';
-import { Composition } from 'remotion';
+import { Composition, staticFile, CalculateMetadataFunction } from 'remotion';
+import { getAudioDurationInSeconds } from '@remotion/media-utils';
 import { TailwindTest } from './compositions/TailwindTest';
 import { InlineTest } from './compositions/InlineTest';
 import { Generated } from './compositions/Generated';
-import './tailwind-output.css'; // Pre-built Tailwind CSS
+import './tailwind-output.css';
 
-export interface VideoProps {
+export type VideoProps = {
   content: {
     title: string;
     description: string;
     features: string[];
     heroImage?: string;
-    domain: string; // Display-friendly domain for showing in video
+    domain: string;
   };
   branding: {
-    logo: { url: string };
+    logo: { url: string; staticPath?: string };
     colors: {
       primary: string;
       secondary: string;
@@ -25,37 +26,65 @@ export interface VideoProps {
     theme: 'light' | 'dark';
   };
   audio: {
-    music: { localPath: string };
-    narration: { localPath: string; timecodes: any[] };
+    music: { staticPath: string };
+    narration: { staticPath: string; timecodes: any[] };
     beats: number[];
   };
   metadata: {
-    domain: string; // Technical domain for tracking/analytics
+    domain: string;
     industry: string;
   };
   duration: number;
-}
+};
+
+const FPS = 30;
+const DEFAULT_DURATION_FRAMES = 900; // 30s fallback
+
+const calculateVideoMetadata: CalculateMetadataFunction<VideoProps> = async ({
+  props,
+}) => {
+  let durationInFrames = DEFAULT_DURATION_FRAMES;
+
+  if (props.audio?.music?.staticPath) {
+    try {
+      const musicDuration = await getAudioDurationInSeconds(
+        staticFile(props.audio.music.staticPath),
+      );
+      durationInFrames = Math.ceil(musicDuration * FPS);
+    } catch {
+      if (props.audio?.narration?.staticPath) {
+        try {
+          const narrationDuration = await getAudioDurationInSeconds(
+            staticFile(props.audio.narration.staticPath),
+          );
+          durationInFrames = Math.ceil(narrationDuration * FPS);
+        } catch {
+          durationInFrames = Math.ceil((props.duration || 30) * FPS);
+        }
+      }
+    }
+  } else if (props.duration) {
+    durationInFrames = Math.ceil(props.duration * FPS);
+  }
+
+  return { durationInFrames, props };
+};
 
 export const Root: React.FC = () => {
   return (
     <>
-      {/* Generated Composition - Dynamically created by Claude for each video */}
       <Composition
         id="Generated"
         component={Generated}
-        durationInFrames={900} // 30 seconds at 30fps
-        fps={30}
+        durationInFrames={DEFAULT_DURATION_FRAMES}
+        fps={FPS}
         width={1920}
         height={1080}
         defaultProps={{
           content: {
             title: 'Example Video',
             description: 'A dynamically generated video',
-            features: [
-              'Feature 1',
-              'Feature 2',
-              'Feature 3',
-            ],
+            features: ['Feature 1', 'Feature 2', 'Feature 3'],
             domain: 'example.com',
           },
           branding: {
@@ -70,8 +99,8 @@ export const Root: React.FC = () => {
             theme: 'light' as const,
           },
           audio: {
-            music: { localPath: '' },
-            narration: { localPath: '', timecodes: [] },
+            music: { staticPath: '' },
+            narration: { staticPath: '', timecodes: [] },
             beats: [],
           },
           metadata: {
@@ -80,9 +109,9 @@ export const Root: React.FC = () => {
           },
           duration: 30,
         }}
+        calculateMetadata={calculateVideoMetadata}
       />
 
-      {/* Test Compositions */}
       <Composition
         id="TailwindTest"
         component={TailwindTest}

@@ -2,6 +2,13 @@ import axios from 'axios';
 import { chromium } from 'playwright';
 import { extractColorsFromScreenshot } from '../utils/color-extraction.js';
 import { takeScreenshot } from '../utils/screenshot.js';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// ESM __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 interface ExtractedContent {
   content: {
@@ -12,7 +19,7 @@ interface ExtractedContent {
     sections: Array<{ heading: string; text: string }>;
   };
   branding: {
-    logo: { url: string; base64?: string };
+    logo: { url: string; staticPath?: string; base64?: string };
     colors: {
       primary: string;
       secondary: string;
@@ -77,6 +84,12 @@ export async function extractUrlContent(url: string): Promise<ExtractedContent> 
 
   // Infer industry from domain/content
   const industry = inferIndustry(content!.title, content!.description);
+
+  // Download logo to remotion-project/public/images/ for staticFile() access
+  const logoStaticPath = await downloadLogoToPublic(branding!.logo.url, domain);
+  if (logoStaticPath) {
+    branding!.logo.staticPath = logoStaticPath;
+  }
 
   return {
     content: content!,
@@ -264,6 +277,39 @@ function detectTheme(colors: ExtractedContent['branding']['colors']): 'light' | 
   const b = (rgb >> 0) & 0xff;
   const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
   return luminance > 128 ? 'light' : 'dark';
+}
+
+async function downloadLogoToPublic(logoUrl: string, domain: string): Promise<string> {
+  if (!logoUrl) return '';
+
+  try {
+    const response = await axios.get(logoUrl, { responseType: 'arraybuffer', timeout: 10000 });
+    const buffer = Buffer.from(response.data);
+
+    // Determine extension from content-type or URL
+    const contentType = (response.headers['content-type'] as string) || '';
+    let ext = 'png';
+    if (contentType.includes('svg')) ext = 'svg';
+    else if (contentType.includes('jpeg') || contentType.includes('jpg')) ext = 'jpg';
+    else if (logoUrl.endsWith('.svg')) ext = 'svg';
+    else if (logoUrl.endsWith('.jpg') || logoUrl.endsWith('.jpeg')) ext = 'jpg';
+
+    const remotionProjectPath = process.env.REMOTION_PROJECT_PATH || path.join(__dirname, '../../../remotion-project');
+    const publicImagesDir = path.join(remotionProjectPath, 'public', 'images');
+    await fs.mkdir(publicImagesDir, { recursive: true });
+
+    const cleanDomain = domain.replace('www.', '').replace(/[^a-z0-9.-]/g, '');
+    const fileName = `logo-${cleanDomain}.${ext}`;
+    const filePath = path.join(publicImagesDir, fileName);
+
+    await fs.writeFile(filePath, buffer);
+    console.error(`✓ Downloaded logo to: ${filePath} (staticPath: images/${fileName})`);
+
+    return `images/${fileName}`; // Path relative to public/ for staticFile()
+  } catch (error) {
+    console.error('Failed to download logo:', error instanceof Error ? error.message : String(error));
+    return ''; // Agent will use branding.logo.url as fallback
+  }
 }
 
 function inferIndustry(title: string, description: string): string {

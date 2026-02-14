@@ -44,10 +44,14 @@ out/
 .temp/
 tmp/
 
-# Audio files (generated)
-*.wav
-*.mp3
-*.m4a
+# Generated audio and image assets (kept in public/ for staticFile())
+remotion-project/public/audio/*
+remotion-project/public/images/*
+!remotion-project/public/audio/.gitkeep
+!remotion-project/public/images/.gitkeep
 
 # Agent skills (symlinked)
 .agents/
+
+# Skill backup files
+*.backup

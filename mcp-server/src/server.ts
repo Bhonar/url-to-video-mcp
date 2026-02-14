@@ -9,14 +9,20 @@ import {
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Import tools
 import { extractUrlContent } from './tools/extract-url.js';
 import { generateAudio } from './tools/generate-audio.js';
 import { renderVideo } from './tools/render-video.js';
 
-// Load environment variables
-dotenv.config();
+// ESM __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env relative to this file (dist/server.js → ../.env), not cwd
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 // Create MCP server
 const server = new Server(
@@ -36,7 +42,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
       name: 'extract_url_content',
-      description: 'Extract content, branding (logo, colors, fonts), and metadata from a URL. Uses Tabstack API, Brand Identity Extractor, and Playwright screenshot fallback.',
+      description: 'Extract content, branding (logo, colors, fonts), and metadata from a URL. Downloads logo to remotion-project/public/images/ for staticFile() access. Returns branding.logo.staticPath for local logo reference. Uses Tabstack API and cloud logo services with Playwright fallback.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -50,7 +56,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'generate_audio',
-      description: 'Generate background music and narration using MiniMax API. Detects beats for video transition sync. Music is instrumental only (no singing/vocals).',
+      description: 'Generate instrumental background music and narration. Uses ElevenLabs (free tier) as primary provider with MiniMax fallback. Files are saved to remotion-project/public/audio/ for staticFile() access. Returns staticPath for each audio file. Use audio.music.staticPath and audio.narration.staticPath in Generated.tsx with staticFile().',
       inputSchema: {
         type: 'object',
         properties: {
@@ -72,7 +78,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'render_video',
-      description: 'Render the dynamically generated Remotion composition (Generated.tsx) to video file. Claude should write custom video code to src/compositions/Generated.tsx before calling this tool. Saves locally to user\'s machine.',
+      description: 'Render the Generated.tsx composition to MP4. Duration is automatically calculated from audio length via calculateMetadata. Pass audio.music.staticPath and audio.narration.staticPath (not localPath) in inputProps. Write custom video code to Generated.tsx before calling this tool.',
       inputSchema: {
         type: 'object',
         properties: {

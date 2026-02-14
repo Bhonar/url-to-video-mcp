@@ -2,7 +2,10 @@ import axios from 'axios';
 import { detectBeats } from '../utils/beat-detection.js';
 import fs from 'fs/promises';
 import path from 'path';
-import os from 'os';
+import { fileURLToPath } from 'url';
+// ESM __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 interface AudioGenerationParams {
   musicStyle: string;
@@ -14,21 +17,16 @@ interface AudioResult {
   music: {
     url: string;
     localPath: string;
+    staticPath: string; // Path relative to remotion-project/public/ for staticFile()
     duration: number;
   };
   narration: {
     url: string;
     localPath: string;
+    staticPath: string; // Path relative to remotion-project/public/ for staticFile()
     timecodes: Array<{ start: number; end: number; text: string }>;
   };
   beats: number[];
-}
-
-interface Voice {
-  voice_id: string;
-  name?: string;
-  language?: string;
-  gender?: string;
 }
 
 export async function generateAudio(params: AudioGenerationParams): Promise<AudioResult> {
@@ -65,28 +63,101 @@ function createPlaceholderBeats(duration: number): number[] {
 }
 
 async function generateMusic(style: string, duration: number): Promise<AudioResult['music']> {
-  const apiKey = process.env.MINIMAX_API_KEY;
-  const groupId = process.env.MINIMAX_GROUP_ID; // Optional
+  console.error('Generating background music...');
 
-  if (!apiKey) {
-    throw new Error('MINIMAX_API_KEY must be set');
+  // Strategy 1: Try ElevenLabs (free tier available)
+  const elevenLabsKey = process.env.ELEVENLABS_API_KEY;
+  if (elevenLabsKey) {
+    try {
+      const result = await generateMusicElevenLabs(style, duration, elevenLabsKey);
+      if (result) return result;
+    } catch (error) {
+      console.error('ElevenLabs music failed:', error instanceof Error ? error.message : String(error));
+    }
   }
 
-  // Create structural lyrics for instrumental music
-  const lyrics = createInstrumentalLyrics(duration);
+  // Strategy 2: Try MiniMax
+  const minimaxKey = process.env.MINIMAX_API_KEY;
+  if (minimaxKey) {
+    try {
+      const result = await generateMusicMiniMax(style, duration, minimaxKey);
+      if (result) return result;
+    } catch (error) {
+      console.error('MiniMax music failed:', error instanceof Error ? error.message : String(error));
+    }
+  }
 
-  // Create prompt for instrumental music (NO SINGING!)
+  if (!elevenLabsKey && !minimaxKey) {
+    console.error('⚠️  No music API key set. Set ELEVENLABS_API_KEY (free tier) or MINIMAX_API_KEY. Skipping music.');
+  }
+
+  return { url: '', localPath: '', staticPath: '', duration };
+}
+
+async function generateMusicElevenLabs(
+  style: string,
+  duration: number,
+  apiKey: string,
+): Promise<AudioResult['music'] | null> {
+  const prompt = createMusicPrompt(style, duration);
+  const durationMs = duration * 1000;
+
+  console.error(`Using ElevenLabs Music (${style}, ${duration}s)...`);
+
+  const response = await axios.post(
+    'https://api.elevenlabs.io/v1/music',
+    {
+      prompt,
+      model_id: 'music_v1',
+      music_length_ms: durationMs,
+      force_instrumental: true,
+      output_format: 'mp3_44100_128',
+    },
+    {
+      headers: {
+        'xi-api-key': apiKey,
+        'Content-Type': 'application/json',
+        'Accept': 'audio/mpeg',
+      },
+      responseType: 'arraybuffer',
+      timeout: 120000, // Music generation can take longer
+    }
+  );
+
+  const buffer = Buffer.from(response.data);
+  if (buffer.length < 1000) {
+    const text = buffer.toString('utf-8');
+    console.error('⚠️  ElevenLabs returned non-audio response:', text.substring(0, 200));
+    return null;
+  }
+
+  const { localPath, staticPath } = await saveAudioBuffer(buffer, 'music');
+
+  console.error(`✓ ElevenLabs music saved (${(buffer.length / 1024).toFixed(0)} KB)`);
+
+  return {
+    url: '',
+    localPath,
+    staticPath,
+    duration,
+  };
+}
+
+async function generateMusicMiniMax(
+  style: string,
+  duration: number,
+  apiKey: string,
+): Promise<AudioResult['music'] | null> {
+  const groupId = process.env.MINIMAX_GROUP_ID;
+  const lyrics = createInstrumentalLyrics(duration);
   const prompt = createMusicPrompt(style, duration);
 
-  console.error(`Generating ${style} music with structural guide: "${lyrics.substring(0, 50)}..."`);
+  console.error(`Using MiniMax Music (${style}, ${duration}s)...`);
 
-  // Call MiniMax Music API
   const headers: Record<string, string> = {
     'Authorization': `Bearer ${apiKey}`,
     'Content-Type': 'application/json',
   };
-
-  // Add Group ID only if provided (optional)
   if (groupId) {
     headers['X-Group-Id'] = groupId;
   }
@@ -95,44 +166,34 @@ async function generateMusic(style: string, duration: number): Promise<AudioResu
     'https://api.minimax.io/v1/music_generation',
     {
       model: 'music-2.5',
-      lyrics, // Structural lyrics to guide instrumental arrangement
+      lyrics,
       prompt,
       duration,
-      output_format: 'url', // Request URL instead of hex-encoded data
+      output_format: 'url',
     },
     { headers }
   );
 
-  console.error('Music API Response:', JSON.stringify(response.data, null, 2));
-
-  // Check for errors (like insufficient balance)
   if (response.data.base_resp?.status_code !== 0) {
     const errorMsg = response.data.base_resp?.status_msg || 'Unknown error';
-    console.error(`⚠️  Music generation failed: ${errorMsg}. Skipping background music.`);
-    return {
-      url: '',
-      localPath: '',
-      duration,
-    };
+    console.error(`⚠️  MiniMax music failed: ${errorMsg}`);
+    return null;
   }
 
-  // Extract audio URL from response
   const audioUrl = response.data.data?.audio || response.data.audio_url || response.data.url;
   if (!audioUrl) {
-    console.error('⚠️  No audio URL in response. Skipping background music.');
-    return {
-      url: '',
-      localPath: '',
-      duration,
-    };
+    console.error('⚠️  No audio URL in MiniMax response');
+    return null;
   }
 
-  // Download to local temp directory
-  const localPath = await downloadAudio(audioUrl, 'music');
+  const { localPath, staticPath } = await downloadAudio(audioUrl, 'music');
+
+  console.error('✓ MiniMax music saved');
 
   return {
     url: audioUrl,
     localPath,
+    staticPath,
     duration,
   };
 }
@@ -151,26 +212,103 @@ function createInstrumentalLyrics(duration: number): string {
 }
 
 async function generateNarration(script: string): Promise<AudioResult['narration']> {
-  const apiKey = process.env.MINIMAX_API_KEY;
-  const groupId = process.env.MINIMAX_GROUP_ID; // Optional
-
-  if (!apiKey) {
-    throw new Error('MINIMAX_API_KEY must be set');
-  }
-
   console.error('Generating narration...');
 
-  // Select appropriate voice based on script content
-  const voiceId = await selectVoice(script, apiKey, groupId);
-  console.error(`Selected voice: ${voiceId}`);
+  // Strategy 1: Try ElevenLabs (free tier available, best quality)
+  const elevenLabsKey = process.env.ELEVENLABS_API_KEY;
+  if (elevenLabsKey) {
+    try {
+      const result = await generateNarrationElevenLabs(script, elevenLabsKey);
+      if (result) return result;
+    } catch (error) {
+      console.error('ElevenLabs failed:', error instanceof Error ? error.message : String(error));
+    }
+  }
 
-  // Call MiniMax Speech API (TTS)
+  // Strategy 2: Try MiniMax
+  const minimaxKey = process.env.MINIMAX_API_KEY;
+  if (minimaxKey) {
+    try {
+      const result = await generateNarrationMiniMax(script, minimaxKey);
+      if (result) return result;
+    } catch (error) {
+      console.error('MiniMax TTS failed:', error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  // No TTS provider available
+  if (!elevenLabsKey && !minimaxKey) {
+    console.error('⚠️  No TTS API key set. Set ELEVENLABS_API_KEY (free tier) or MINIMAX_API_KEY. Skipping narration.');
+  }
+
+  return { url: '', localPath: '', staticPath: '', timecodes: [] };
+}
+
+async function generateNarrationElevenLabs(
+  script: string,
+  apiKey: string,
+): Promise<AudioResult['narration'] | null> {
+  // ElevenLabs premade voices (professional narration)
+  const voiceId = process.env.ELEVENLABS_VOICE_ID || 'onwK4e9ZLuTAKqWW03F9'; // Daniel - professional male
+
+  console.error(`Using ElevenLabs TTS (voice: ${voiceId})...`);
+
+  const response = await axios.post(
+    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+    {
+      text: script,
+      model_id: 'eleven_multilingual_v2',
+      voice_settings: {
+        stability: 0.6,
+        similarity_boost: 0.75,
+      },
+    },
+    {
+      headers: {
+        'xi-api-key': apiKey,
+        'Content-Type': 'application/json',
+        'Accept': 'audio/mpeg',
+      },
+      responseType: 'arraybuffer',
+      timeout: 60000,
+    }
+  );
+
+  // ElevenLabs returns binary audio directly
+  const buffer = Buffer.from(response.data);
+  if (buffer.length < 1000) {
+    // Likely an error response, not audio
+    const text = buffer.toString('utf-8');
+    console.error('⚠️  ElevenLabs returned non-audio response:', text.substring(0, 200));
+    return null;
+  }
+
+  // Save to remotion-project/public/audio/
+  const { localPath, staticPath } = await saveAudioBuffer(buffer, 'narration');
+  const timecodes = createNarrationTimecodes(script);
+
+  console.error(`✓ ElevenLabs narration saved (${(buffer.length / 1024).toFixed(0)} KB)`);
+
+  return {
+    url: '',
+    localPath,
+    staticPath,
+    timecodes,
+  };
+}
+
+async function generateNarrationMiniMax(
+  script: string,
+  apiKey: string,
+): Promise<AudioResult['narration'] | null> {
+  const groupId = process.env.MINIMAX_GROUP_ID;
+
+  console.error('Using MiniMax TTS...');
+
   const headers: Record<string, string> = {
     'Authorization': `Bearer ${apiKey}`,
     'Content-Type': 'application/json',
   };
-
-  // Add Group ID only if provided (optional)
   if (groupId) {
     headers['X-Group-Id'] = groupId;
   }
@@ -178,109 +316,43 @@ async function generateNarration(script: string): Promise<AudioResult['narration
   const response = await axios.post(
     'https://api.minimax.io/v1/t2a_v2',
     {
-      model: 'speech-2.6-hd',
+      model: 'speech-02-hd',
       text: script,
-      voice_id: voiceId,
-      speed: 1.0,
-      output_format: 'url', // Request URL instead of hex-encoded data
+      voice_setting: {
+        voice_id: 'male-qn-qingse',
+        speed: 1.0,
+      },
+      audio_setting: {
+        format: 'mp3',
+        sample_rate: 32000,
+      },
     },
     { headers }
   );
 
-  console.error('TTS API Response structure:', {
-    hasData: !!response.data.data,
-    hasAudio: !!response.data.data?.audio,
-    statusCode: response.data.base_resp?.status_code,
-    statusMsg: response.data.base_resp?.status_msg,
-  });
-
-  // Check for errors (like insufficient balance)
   if (response.data.base_resp?.status_code !== 0) {
     const errorMsg = response.data.base_resp?.status_msg || 'Unknown error';
-    console.error(`⚠️  Narration generation failed: ${errorMsg}. Skipping narration.`);
-    return {
-      url: '',
-      localPath: '',
-      timecodes: [],
-    };
+    console.error(`⚠️  MiniMax TTS failed: ${errorMsg}`);
+    return null;
   }
 
-  // Extract audio URL from response
-  const audioUrl = response.data.data?.audio || response.data.audio_url || response.data.url;
+  const audioUrl = response.data.data?.audio || response.data.data?.audio_file?.url;
   if (!audioUrl) {
-    console.error('⚠️  No audio URL in response. Skipping narration.');
-    return {
-      url: '',
-      localPath: '',
-      timecodes: [],
-    };
+    console.error('⚠️  No audio URL in MiniMax response');
+    return null;
   }
 
-  // Download to local temp directory
-  const localPath = await downloadAudio(audioUrl, 'narration');
-
-  // Parse timecodes from response (if available)
-  // For now, create simple timecodes based on script length
+  const { localPath, staticPath } = await downloadAudio(audioUrl, 'narration');
   const timecodes = createNarrationTimecodes(script);
+
+  console.error('✓ MiniMax narration saved');
 
   return {
     url: audioUrl,
     localPath,
+    staticPath,
     timecodes,
   };
-}
-
-async function selectVoice(script: string, apiKey: string, groupId?: string): Promise<string> {
-  try {
-    // Try to get available voices from API
-    const headers: Record<string, string> = {
-      'Authorization': `Bearer ${apiKey}`,
-    };
-
-    if (groupId) {
-      headers['X-Group-Id'] = groupId;
-    }
-
-    const response = await axios.get('https://api.minimax.io/v1/query/voice', { headers });
-
-    const voices: Voice[] = response.data.data?.voices || response.data.voices || [];
-
-    if (voices.length > 0) {
-      // Filter for English professional voices
-      const englishVoices = voices.filter(v =>
-        v.voice_id?.includes('English') || v.language?.toLowerCase().includes('en')
-      );
-
-      const professionalVoices = englishVoices.filter(v =>
-        v.voice_id?.toLowerCase().includes('professional') ||
-        v.voice_id?.toLowerCase().includes('narrator') ||
-        v.voice_id?.toLowerCase().includes('insightful') ||
-        v.voice_id?.toLowerCase().includes('speaker')
-      );
-
-      if (professionalVoices.length > 0) {
-        return professionalVoices[0].voice_id;
-      }
-
-      if (englishVoices.length > 0) {
-        return englishVoices[0].voice_id;
-      }
-
-      return voices[0].voice_id;
-    }
-  } catch (error) {
-    console.error('Failed to query voices, using fallback:', error instanceof Error ? error.message : String(error));
-  }
-
-  // Fallback to common professional voices
-  const fallbackVoices = [
-    'English_Insightful_Speaker',
-    'English_Professional_Narrator',
-    'English_Male_Narrator',
-    'English_Female_Narrator',
-  ];
-
-  return fallbackVoices[0];
 }
 
 function createMusicPrompt(style: string, duration: number): string {
@@ -325,18 +397,26 @@ function createNarrationTimecodes(script: string): Array<{ start: number; end: n
   return timecodes;
 }
 
-async function downloadAudio(url: string, prefix: string): Promise<string> {
+async function downloadAudio(url: string, prefix: string): Promise<{ localPath: string; staticPath: string }> {
   const response = await axios.get(url, { responseType: 'arraybuffer' });
   const buffer = Buffer.from(response.data);
+  return saveAudioBuffer(buffer, prefix);
+}
 
-  // Save to temp directory
-  const tempDir = os.tmpdir();
+async function saveAudioBuffer(buffer: Buffer, prefix: string): Promise<{ localPath: string; staticPath: string }> {
+  // Save to remotion-project/public/audio/ so Remotion can access via staticFile()
+  const remotionProjectPath = process.env.REMOTION_PROJECT_PATH || path.join(__dirname, '../../../remotion-project');
+  const publicAudioDir = path.join(remotionProjectPath, 'public', 'audio');
+  await fs.mkdir(publicAudioDir, { recursive: true });
+
   const fileName = `${prefix}-${Date.now()}.mp3`;
-  const filePath = path.join(tempDir, fileName);
+  const localPath = path.join(publicAudioDir, fileName);
 
-  await fs.writeFile(filePath, buffer);
+  await fs.writeFile(localPath, buffer);
 
-  console.error(`✓ Downloaded ${prefix} to: ${filePath}`);
+  const staticPath = `audio/${fileName}`; // Relative to public/ for staticFile()
 
-  return filePath;
+  console.error(`✓ Saved ${prefix} to: ${localPath} (staticPath: ${staticPath})`);
+
+  return { localPath, staticPath };
 }

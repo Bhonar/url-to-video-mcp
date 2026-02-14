@@ -22,20 +22,8 @@ module.exports = {
           foreground: 'hsl(var(--accent-foreground))',
         },
       },
-      keyframes: {
-        'fade-in': {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        'slide-up': {
-          '0%': { transform: 'translateY(100%)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
-        'scale-in': {
-          '0%': { transform: 'scale(0.9)', opacity: '0' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
-        },
-      },
+      // CSS keyframes/animations are FORBIDDEN in Remotion.
+      // All animations must use useCurrentFrame() + spring/interpolate.
     },
   },
   plugins: [],
