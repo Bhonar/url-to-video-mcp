@@ -161,18 +161,21 @@ node dist/server.js
 
 ## Integration with Claude Code
 
-Add to your Claude Code MCP configuration:
+Add to your Claude Code MCP configuration (`~/.claude/config.json`):
 
 ```json
 {
   "mcpServers": {
     "url-to-video": {
       "command": "node",
-      "args": ["/path/to/url-to-video-mcp/mcp-server/dist/server.js"]
+      "args": ["/path/to/url-to-video-mcp/mcp-server/dist/server.js"],
+      "cwd": "/path/to/url-to-video-mcp/mcp-server"
     }
   }
 }
 ```
+
+**Important:** The `cwd` (current working directory) option is required so the server can find the `.env` file with API keys and configuration.
 
 ## Architecture
 
