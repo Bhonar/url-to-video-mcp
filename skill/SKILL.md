@@ -97,6 +97,98 @@ Plan 4-6 scenes before writing code:
 
 ---
 
+### Creative Direction
+
+Follow these principles to produce bespoke videos, not template output. **Every video must feel unique.**
+
+#### Scene Layout Variety
+
+Never use the same layout for consecutive scenes. Mix from this palette:
+
+| Layout | Best For | How |
+|--------|----------|-----|
+| **Full-bleed** | Hook, CTA, dramatic moments | Content centered on gradient/image background, large text |
+| **Split-screen** | Problem/Solution, before/after | 60/40 or 50/50 vertical divide, content on one side |
+| **Asymmetric** | Feature highlights | Large visual (70%) + text sidebar (30%), offset from center |
+| **Grid** | Multiple features, comparisons | 2x2 or 3-column cards with icons or numbers |
+| **Stacked** | Sequential info, step-by-step | Top-to-bottom reveals with staggered animations |
+| **Isolated** | Key stats, testimonials, quotes | Single element centered with generous white space (60%+) |
+
+**Rule: Every video must use at least 3 different layouts across its scenes.**
+
+#### Visual Depth & Layering
+
+Flat designs look like slides. Add depth with 3 layers using `AbsoluteFill` stacking:
+
+- **Background layer**: Gradient, blurred geometric shapes at 5-10% opacity, subtle grid pattern
+- **Mid layer**: Content cards, images, text blocks
+- **Foreground layer**: Floating accent shapes, thin decorative lines, small dots
+
+Animate layers at different speeds for parallax feel:
+```typescript
+const bgShift = interpolate(frame, [0, duration], [0, -20], { extrapolateRight: 'clamp' });
+const fgShift = interpolate(frame, [0, duration], [0, 20], { extrapolateRight: 'clamp' });
+```
+
+#### Color Usage Strategy
+
+Follow the **60-30-10 rule** — never use brand colors at full saturation everywhere:
+
+- **60%** — Background/base: use `branding.colors.background` or a light tint of primary
+- **30%** — Secondary areas: cards, dividers, section fills — use `branding.colors.secondary` or primary at 20% opacity
+- **10%** — Accent pops: CTAs, highlights, key numbers — use `branding.colors.accent`
+
+**Gradients over flat fills**: Use `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` for scene backgrounds. Never use a single flat color fill.
+
+**Text contrast**: On dark backgrounds use white/light text. On light backgrounds use dark text. Always verify readability.
+
+#### Animation as Personality
+
+Different brands need different motion. Don't use the same spring config for every element.
+
+| Brand Type | Enter Animation | Emphasis | Exit |
+|-----------|----------------|----------|------|
+| **Tech/Modern** | Slide from bottom, snappy: `{ damping: 12, stiffness: 200 }` | Scale pulse 1.0→1.05 | Fade + slide up |
+| **Corporate** | Fade in, smooth: `{ damping: 200 }` | Color shift via `interpolateColors` | Fade out |
+| **Creative/Playful** | Bounce in: `{ damping: 8 }`, slight overshoot | Rotate wiggle ±3deg | Scale down |
+| **Luxury/Minimal** | Slow fade (2s), slide from center outward | Letter-spacing expand | Slow fade |
+| **Startup/Bold** | Fast slide from left: `{ damping: 15, stiffness: 300 }` | Underline draw-on | Wipe out |
+
+**Stagger rule**: When multiple elements enter a scene, stagger by 5-8 frames each. Never animate everything simultaneously:
+```typescript
+{features.map((feature, i) => {
+  const delay = i * 6;
+  const y = spring({ frame: frame - delay, fps, from: 40, to: 0, config: { damping: 14 } });
+  const opacity = spring({ frame: frame - delay, fps, from: 0, to: 1 });
+  return <div key={i} style={{ transform: `translateY(${y}px)`, opacity }}>{feature}</div>;
+})}
+```
+
+#### Typography Hierarchy
+
+Every scene needs clear visual hierarchy — one dominant, one supporting, one detail level:
+
+- **Dominant**: Largest text (hero title `height * 0.10` to `height * 0.14`), weight 700-800
+- **Supporting**: 60% of dominant size, weight 400-500
+- **Details**: 40% of dominant size, weight 300-400
+
+**Letter spacing**: Tighten large headings (`letterSpacing: -1`). Open up small text (`letterSpacing: 1`).
+
+**Weight contrast**: Always pair bold headings (700) with regular body (400). Same weight for everything = template look.
+
+#### Industry-Specific Scene Ideas
+
+Use these patterns based on `metadata.industry`:
+
+- **Tech/SaaS**: Floating UI mockup cards, code snippet reveals, animated metric counters, dark-mode gradients
+- **E-commerce**: Product spotlight with glow effect, price + discount animation, card grid showcases
+- **Finance**: Chart line draw-on animations, trust badges, number counters animating from 0
+- **Healthcare**: Soft gradients (pastel), circular/rounded elements, calming pace, icon-driven features
+- **Education**: Step-by-step progress bar fills, sequential reveals, book/page metaphors
+- **General**: Strong 60-30-10 color usage, typography hierarchy, staggered animations
+
+---
+
 ### Step 4: Load Font
 
 Choose a Google Font that matches the brand personality. Load it using `@remotion/google-fonts`:

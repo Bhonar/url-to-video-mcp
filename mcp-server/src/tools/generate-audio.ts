@@ -27,30 +27,37 @@ interface AudioResult {
     timecodes: Array<{ start: number; end: number; text: string }>;
   };
   beats: number[];
+  warnings: string[]; // Diagnostic messages surfaced to agent
 }
 
 export async function generateAudio(params: AudioGenerationParams): Promise<AudioResult> {
   console.error(`Generating audio: ${params.musicStyle} style, ${params.duration}s`);
 
   const { musicStyle, narrationScript, duration } = params;
+  const warnings: string[] = [];
 
   // Generate background music (instrumental with structural lyrics)
-  const music = await generateMusic(musicStyle, duration);
+  const music = await generateMusic(musicStyle, duration, warnings);
 
   // Generate narration (text-to-speech with intelligent voice selection)
-  const narration = await generateNarration(narrationScript);
+  const narration = await generateNarration(narrationScript, warnings);
 
   // Detect beats from music for transition sync
   const beats = music.localPath
     ? await detectBeats(music.localPath)
     : createPlaceholderBeats(duration);
 
-  console.error(`✓ Generated audio: ${beats.length} beats detected`);
+  if (!music.localPath) {
+    warnings.push('Using placeholder beats (no music file for beat detection)');
+  }
+
+  console.error(`✓ Generated audio: ${beats.length} beats detected, ${warnings.length} warnings`);
 
   return {
     music,
     narration,
     beats,
+    warnings,
   };
 }
 
@@ -62,17 +69,19 @@ function createPlaceholderBeats(duration: number): number[] {
   return beats;
 }
 
-async function generateMusic(style: string, duration: number): Promise<AudioResult['music']> {
+async function generateMusic(style: string, duration: number, warnings: string[]): Promise<AudioResult['music']> {
   console.error('Generating background music...');
 
   // Strategy 1: Try ElevenLabs (free tier available)
   const elevenLabsKey = process.env.ELEVENLABS_API_KEY;
   if (elevenLabsKey) {
     try {
-      const result = await generateMusicElevenLabs(style, duration, elevenLabsKey);
+      const result = await generateMusicElevenLabs(style, duration, elevenLabsKey, warnings);
       if (result) return result;
     } catch (error) {
-      console.error('ElevenLabs music failed:', error instanceof Error ? error.message : String(error));
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error('ElevenLabs music failed:', msg);
+      warnings.push(`ElevenLabs music failed: ${msg}`);
     }
   }
 
@@ -80,17 +89,20 @@ async function generateMusic(style: string, duration: number): Promise<AudioResu
   const minimaxKey = process.env.MINIMAX_API_KEY;
   if (minimaxKey) {
     try {
-      const result = await generateMusicMiniMax(style, duration, minimaxKey);
+      const result = await generateMusicMiniMax(style, duration, minimaxKey, warnings);
       if (result) return result;
     } catch (error) {
-      console.error('MiniMax music failed:', error instanceof Error ? error.message : String(error));
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error('MiniMax music failed:', msg);
+      warnings.push(`MiniMax music failed: ${msg}`);
     }
   }
 
   if (!elevenLabsKey && !minimaxKey) {
-    console.error('⚠️  No music API key set. Set ELEVENLABS_API_KEY (free tier) or MINIMAX_API_KEY. Skipping music.');
+    warnings.push('No music API key configured. Set ELEVENLABS_API_KEY (free tier) or MINIMAX_API_KEY in .env');
   }
 
+  warnings.push('Music generation skipped — video will have no background music');
   return { url: '', localPath: '', staticPath: '', duration };
 }
 
@@ -98,6 +110,7 @@ async function generateMusicElevenLabs(
   style: string,
   duration: number,
   apiKey: string,
+  warnings: string[],
 ): Promise<AudioResult['music'] | null> {
   const prompt = createMusicPrompt(style, duration);
   const durationMs = duration * 1000;
@@ -128,6 +141,7 @@ async function generateMusicElevenLabs(
   if (buffer.length < 1000) {
     const text = buffer.toString('utf-8');
     console.error('⚠️  ElevenLabs returned non-audio response:', text.substring(0, 200));
+    warnings.push(`ElevenLabs music returned non-audio response (${buffer.length} bytes): ${text.substring(0, 100)}`);
     return null;
   }
 
@@ -147,6 +161,7 @@ async function generateMusicMiniMax(
   style: string,
   duration: number,
   apiKey: string,
+  warnings: string[],
 ): Promise<AudioResult['music'] | null> {
   const groupId = process.env.MINIMAX_GROUP_ID;
   const lyrics = createInstrumentalLyrics(duration);
@@ -177,12 +192,14 @@ async function generateMusicMiniMax(
   if (response.data.base_resp?.status_code !== 0) {
     const errorMsg = response.data.base_resp?.status_msg || 'Unknown error';
     console.error(`⚠️  MiniMax music failed: ${errorMsg}`);
+    warnings.push(`MiniMax music API error: ${errorMsg}`);
     return null;
   }
 
   const audioUrl = response.data.data?.audio || response.data.audio_url || response.data.url;
   if (!audioUrl) {
     console.error('⚠️  No audio URL in MiniMax response');
+    warnings.push('MiniMax music returned success but no audio URL in response');
     return null;
   }
 
@@ -211,17 +228,19 @@ function createInstrumentalLyrics(duration: number): string {
   }
 }
 
-async function generateNarration(script: string): Promise<AudioResult['narration']> {
+async function generateNarration(script: string, warnings: string[]): Promise<AudioResult['narration']> {
   console.error('Generating narration...');
 
   // Strategy 1: Try ElevenLabs (free tier available, best quality)
   const elevenLabsKey = process.env.ELEVENLABS_API_KEY;
   if (elevenLabsKey) {
     try {
-      const result = await generateNarrationElevenLabs(script, elevenLabsKey);
+      const result = await generateNarrationElevenLabs(script, elevenLabsKey, warnings);
       if (result) return result;
     } catch (error) {
-      console.error('ElevenLabs failed:', error instanceof Error ? error.message : String(error));
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error('ElevenLabs failed:', msg);
+      warnings.push(`ElevenLabs narration failed: ${msg}`);
     }
   }
 
@@ -229,24 +248,28 @@ async function generateNarration(script: string): Promise<AudioResult['narration
   const minimaxKey = process.env.MINIMAX_API_KEY;
   if (minimaxKey) {
     try {
-      const result = await generateNarrationMiniMax(script, minimaxKey);
+      const result = await generateNarrationMiniMax(script, minimaxKey, warnings);
       if (result) return result;
     } catch (error) {
-      console.error('MiniMax TTS failed:', error instanceof Error ? error.message : String(error));
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error('MiniMax TTS failed:', msg);
+      warnings.push(`MiniMax narration failed: ${msg}`);
     }
   }
 
   // No TTS provider available
   if (!elevenLabsKey && !minimaxKey) {
-    console.error('⚠️  No TTS API key set. Set ELEVENLABS_API_KEY (free tier) or MINIMAX_API_KEY. Skipping narration.');
+    warnings.push('No TTS API key configured. Set ELEVENLABS_API_KEY (free tier) or MINIMAX_API_KEY in .env');
   }
 
+  warnings.push('Narration generation skipped — video will have no voiceover');
   return { url: '', localPath: '', staticPath: '', timecodes: [] };
 }
 
 async function generateNarrationElevenLabs(
   script: string,
   apiKey: string,
+  warnings: string[],
 ): Promise<AudioResult['narration'] | null> {
   // ElevenLabs premade voices (professional narration)
   const voiceId = process.env.ELEVENLABS_VOICE_ID || 'onwK4e9ZLuTAKqWW03F9'; // Daniel - professional male
@@ -280,6 +303,7 @@ async function generateNarrationElevenLabs(
     // Likely an error response, not audio
     const text = buffer.toString('utf-8');
     console.error('⚠️  ElevenLabs returned non-audio response:', text.substring(0, 200));
+    warnings.push(`ElevenLabs TTS returned non-audio response (${buffer.length} bytes): ${text.substring(0, 100)}`);
     return null;
   }
 
@@ -300,6 +324,7 @@ async function generateNarrationElevenLabs(
 async function generateNarrationMiniMax(
   script: string,
   apiKey: string,
+  warnings: string[],
 ): Promise<AudioResult['narration'] | null> {
   const groupId = process.env.MINIMAX_GROUP_ID;
 
@@ -333,12 +358,14 @@ async function generateNarrationMiniMax(
   if (response.data.base_resp?.status_code !== 0) {
     const errorMsg = response.data.base_resp?.status_msg || 'Unknown error';
     console.error(`⚠️  MiniMax TTS failed: ${errorMsg}`);
+    warnings.push(`MiniMax TTS API error: ${errorMsg}`);
     return null;
   }
 
   const audioUrl = response.data.data?.audio || response.data.data?.audio_file?.url;
   if (!audioUrl) {
     console.error('⚠️  No audio URL in MiniMax response');
+    warnings.push('MiniMax TTS returned success but no audio URL in response');
     return null;
   }
 
